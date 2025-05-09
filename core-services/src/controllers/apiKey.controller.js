@@ -22,10 +22,10 @@ export const createAPIKeyController = async (req, res) => {
 
 	} catch (error) {
 		if (error.message.includes('UNIQUE constraint failed')) {
-      return res.status(409).json({ error: 'API key already exists' });
+      	return res.status(409).json({ error: 'API key already exists' });
     }
     
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error
     });

@@ -3,6 +3,7 @@ import apiKeyRoutes from './routes/apiKeys.route.js';
 import authRoutes from './routes/auth.route.js';
 import coreApiRoutes from './routes/coreApi.route.js';
 import usageRoutes from './routes/keyUsage.route.js';
+import blogRoutes from './routes/blog.route.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -21,5 +22,6 @@ app.use(`/api/auth`, authRoutes);
 app.use(`/api/api-keys`, authenticateUser, apiKeyRoutes);
 app.use(`/api/countries`, authenticateUser, coreApiRoutes);
 app.use(`/api/usage`, authenticateUser, usageRoutes);
+app.use(`/api/blogs`, authenticateUser, blogRoutes)
 
 export default app;

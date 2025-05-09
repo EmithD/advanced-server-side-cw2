@@ -1,0 +1,24 @@
+{
+  "name": "blogs-service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "author": "EmithD",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "codemon": "^0.1.31-development",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "path": "^0.12.7",
+    "sqlite3": "^5.1.7",
+    "url": "^0.11.4",
+    "uuid": "^11.1.0"
+  }
+}

@@ -44,7 +44,6 @@ export const getAPIKeysByUserId = (user_id) => {
           reject(err);
           return;
         }
-
         resolve(rows);
       }
     );

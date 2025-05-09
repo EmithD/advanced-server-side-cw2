@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Plane, Menu, X } from 'lucide-react';
+import { Plane, Menu, Search, PenLine } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -23,6 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
 
 export default function TravelBlogLayout({
   children,
@@ -30,6 +31,15 @@ export default function TravelBlogLayout({
   children: React.ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Implement search functionality here
+    console.log('Searching for:', searchQuery);
+    // You could redirect to a search results page, e.g.:
+    // router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -73,7 +83,37 @@ export default function TravelBlogLayout({
             </NavigationMenu>
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-end items-center space-x-4">
+
+            <form onSubmit={handleSearch} className="relative w-48">
+              <Input
+                type="search"
+                placeholder="Search..."
+                className="pr-8 h-9 w-full"
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+              />
+              <button 
+                type="submit" 
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                aria-label="Search"
+              >
+                <Search className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </form>
+            
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="flex items-center gap-1"
+              asChild
+            >
+              <Link href="/admin/blog/create">
+                <PenLine className="h-4 w-4" />
+                <span>Create</span>
+              </Link>
+            </Button>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -98,13 +138,24 @@ export default function TravelBlogLayout({
 
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
         <div className="container mx-auto flex h-16 items-center justify-between">
-
           <Link href="/" className="flex items-center space-x-2">
             <Plane className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold">Travel Tales</span>
           </Link>
 
           <div className="flex items-center space-x-2">
+
+            <Button 
+              variant="default" 
+              size="sm"
+              className="flex items-center"
+              asChild
+            >
+              <Link href="/admin/blog/create">
+                <PenLine className="h-4 w-4" />
+              </Link>
+            </Button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -136,6 +187,23 @@ export default function TravelBlogLayout({
                   <SheetTitle>Travel Tales</SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col h-full">
+                  
+                  <form onSubmit={handleSearch} className="relative mt-6 mb-2">
+                    <Input
+                      type="search"
+                      placeholder="Search..."
+                      className="pr-8"
+                      value={searchQuery}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                    />
+                    <button 
+                      type="submit" 
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                      aria-label="Search"
+                    >
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </form>
 
                   <nav className="flex flex-col space-y-4 py-6">
                     <SheetClose asChild>

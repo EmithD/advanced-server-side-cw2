@@ -21,42 +21,33 @@ const initDb = async () => {
       console.log('Connected to SQLite database');
 
       const tables = [
-        `CREATE TABLE IF NOT EXISTS users (
+        `CREATE TABLE IF NOT EXISTS blogs (
           id TEXT PRIMARY KEY,
-          display_name TEXT UNIQUE NOT NULL,
-          email TEXT UNIQUE NOT NULL,
-          password TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        `CREATE TABLE IF NOT EXISTS api_keys (
-          id TEXT PRIMARY KEY,
-          api_key TEXT NOT NULL UNIQUE,
           user_id TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_id) REFERENCES users (id)
-        )`,
-
-        `CREATE TABLE IF NOT EXISTS api_key_usage (
-          id TEXT PRIMARY KEY,
-          api_key TEXT NOT NULL,
-          endpoint TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (api_key) REFERENCES api_keys (api_key)
-        )`
-      ];
-
-      const countriesTable = [
-        `CREATE TABLE IF NOT EXISTS countries (
-          id TEXT PRIMARY KEY,
-          common_name TEXT,
-          official_name TEXT NOT NULL,
+          title TEXT NOT NULL,
+          country_code TEXT NOT NULL,
+          content TEXT NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`
+        )`,
+        `CREATE TABLE IF NOT EXISTS comments (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          blog_id TEXT NOT NULL,
+          comment TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (blog_id) REFERENCES blogs (id)
+        )`,
+        `CREATE TABLE IF NOT EXISTS likes (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          blog_id TEXT NOT NULL,
+          liked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (blog_id) REFERENCES blogs (id)
+        )`,
       ];
 
       db.serialize(() => {
-        const allQueries = [...tables, ...countriesTable];
+        const allQueries = [...tables];
 
         let completed = 0;
         allQueries.forEach((sql, index) => {

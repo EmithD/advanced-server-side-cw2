@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -31,6 +31,7 @@ export interface RichTextEditorRef {
   getContent: () => string;
   isEmpty: () => boolean;
   clearContent: () => void;
+  setHTML: (content: string) => void;
 }
 
 const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
@@ -44,6 +45,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
     const [linkDialogOpen, setLinkDialogOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
     const [linkText, setLinkText] = useState('');
+    const [contentLoaded, setContentLoaded] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const editor = useEditor({
@@ -64,6 +66,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
           HTMLAttributes: {
             class: 'mx-auto my-4 max-w-full rounded-lg shadow-md',
           },
+          allowBase64: true, // Important to allow base64 images
         }),
         Link.configure({
           openOnClick: false,
@@ -96,12 +99,33 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
       immediatelyRender: false,
     });
 
+    // Set content when editor is ready and content has changed
+    useEffect(() => {
+      if (editor && initialContent !== '<p></p>' && !contentLoaded) {
+        // Using a timeout to ensure the editor is fully initialized
+        setTimeout(() => {
+          editor.commands.setContent(initialContent);
+          setContentLoaded(true);
+        }, 100);
+      }
+    }, [editor, initialContent, contentLoaded]);
+
+    // Reset contentLoaded flag when initialContent changes
+    useEffect(() => {
+      setContentLoaded(false);
+    }, [initialContent]);
+
     // Expose methods to parent component
     useImperativeHandle(ref, () => ({
       getHTML: () => editor?.getHTML() || '',
       getContent: () => editor?.getHTML() || '',
       isEmpty: () => editor?.isEmpty || true,
       clearContent: () => editor?.commands.clearContent(true),
+      setHTML: (content: string) => {
+        if (editor) {
+          editor.commands.setContent(content);
+        }
+      }
     }));
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

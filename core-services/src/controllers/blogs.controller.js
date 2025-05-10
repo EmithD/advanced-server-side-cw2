@@ -241,3 +241,25 @@ export const getBlogsByUserIdController = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
+
+export const deleteBlogController = async (req, res) => {
+    try {
+        const blogId = req.params.id;
+        const deleteRes = await fetch(`${process.env.BLOG_BE_URL}/api/blogs/${blogId}`, {
+            method: "DELETE"
+        });
+
+        if (!deleteRes.ok) {
+            return res.status(500).json({ error: "Delete Res from 3001 failed."})
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: "Blog deleted."
+        });
+
+    } catch (error) {
+        console.error('Error in deleteBlogController:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+} 

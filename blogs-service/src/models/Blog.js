@@ -67,3 +67,64 @@ export const getBlogsByUserId = (user_id) => {
         );
     });
 }
+
+export const deleteBlog = (id) => {
+    return new Promise(async (resolve, reject) => {
+        db.run('BEGIN TRANSACTION', (transErr) => {
+            if (transErr) {
+                reject(transErr);
+                return;
+            }
+
+            db.run('DELETE FROM likes WHERE blog_id = ?', [id], (likesErr) => {
+                if (likesErr) {
+                    db.run('ROLLBACK', () => reject(likesErr));
+                    return;
+                }
+
+                db.run('DELETE FROM comments WHERE blog_id = ?', [id], (commentsErr) => {
+                    if (commentsErr) {
+                        db.run('ROLLBACK', () => reject(commentsErr));
+                        return;
+                    }
+
+                    db.run('DELETE FROM blogs WHERE id = ?', [id], function(blogErr) {
+                        if (blogErr) {
+                            db.run('ROLLBACK', () => reject(blogErr));
+                            return;
+                        }
+
+                        db.run('COMMIT', (commitErr) => {
+                            if (commitErr) {
+                                db.run('ROLLBACK', () => reject(commitErr));
+                                return;
+                            }
+                            resolve();
+                        });
+                    });
+                });
+            });
+        });
+    });
+};
+
+export const updateBlog = async (id, blogData) => {
+    const { title, content, country_code, country_name } = blogData;
+
+    return new Promise((resolve, reject) => {
+        db.run(
+            `UPDATE blogs 
+             SET title = ?, content = ?, country_code = ?, country_name = ? 
+             WHERE id = ?`,
+            [title, content, country_code, country_name, id],
+            function (err) {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve({ changes: this.changes });
+            }
+        );
+    });
+};
+

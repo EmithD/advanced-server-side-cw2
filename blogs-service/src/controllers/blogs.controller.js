@@ -128,3 +128,30 @@ export const getBlogsByUserIdController = async (req, res) => {
         });
     }
 };
+
+export const deleteBlogController = async (req, res) => {
+    try {
+
+        const blogId = req.params.id;
+        const blog = await BlogModel.getBlogById(blogId);
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                error: "Blog not found."
+            });
+        } else {
+            await BlogModel.deleteBlog(blogId);
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: "Blog deleted successfully."
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};

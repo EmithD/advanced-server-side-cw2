@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle } from 'lucide-react';
+import { Loader2, PlusCircle, UserPlus, Check } from 'lucide-react';
 import BlogCard, { BlogPost } from '@/components/BlogCard';
 import { useParams } from 'next/navigation';
 
@@ -14,45 +14,125 @@ export default function Profile() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [userDisplayName, setUserDisplayName] = useState("");
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => {
-    const fetchUserBlogs = async () => {
+    const fetchUserData = async () => {
       if (!userId) {
         setError('User ID not found in URL');
         setLoading(false);
         return;
       }
 
+      // Check if this is the logged-in user's profile
+      const user = localStorage.getItem('user');
+      const userData = user ? JSON.parse(user) : null;
+      const loggedInUserId = userData ? userData.id : null;
+      setIsOwnProfile(userId === loggedInUserId);
+
       try {
         setLoading(true);
-        console.log('Fetching user blogs for userId:', userId);
-        const response = await fetch(`/api/blogs/user/${userId}`, {
+        console.log('Fetching user data for userId:', userId);
+        
+        // Fetch user's blogs
+        const blogsResponse = await fetch(`/api/blogs/user/${userId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch user blogs: ${response.status}`);
+        if (!blogsResponse.ok) {
+          throw new Error(`Failed to fetch user blogs: ${blogsResponse.status}`);
         }
         
-        const data = await response.json();
-        setBlogs(data.data || []);
+        const blogsData = await blogsResponse.json();
+        setBlogs(blogsData.data || []);
+        
+        // If there are blogs, get the user's display name from the first blog
+        if (blogsData.data && blogsData.data.length > 0 && blogsData.data[0].user) {
+          setUserDisplayName(blogsData.data[0].user.display_name || "User");
+        } else {
+          // Otherwise, fetch user information directly
+          const userResponse = await fetch(`/api/users/${userId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          });
+          
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            setUserDisplayName(userData.display_name || "User");
+          }
+        }
+        
+        // Check if logged-in user follows this user
+        // Note: This is a placeholder. Implement actual follow status check based on your API
+        if (!isOwnProfile && loggedInUserId) {
+          try {
+            const followResponse = await fetch(`/api/follow/check`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                followee_id: userId
+              })
+            });
+            
+            if (followResponse.ok) {
+              const followData = await followResponse.json();
+              setIsFollowing(followData.isFollowing || false);
+            }
+          } catch (error) {
+            console.error('Error checking follow status:', error);
+          }
+        }
+        
       } catch (error) {
-        console.error('Error fetching user blogs:', error);
+        console.error('Error fetching user data:', error);
         setError('Failed to load user\'s travel stories. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserBlogs();
+    fetchUserData();
   }, [userId]);
 
-  // Console log to debug params
-  useEffect(() => {
-    console.log('URL params:', params);
-  }, [params]);
+  const handleFollow = async () => {
+    if (followLoading) return;
+    
+    try {
+      setFollowLoading(true);
+      
+      const endpoint = isFollowing ? `/api/follow/unfollow` : `/api/follow`;
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          followee_id: userId
+        })
+      });
+      
+      if (response.ok) {
+        setIsFollowing(!isFollowing);
+      } else {
+        throw new Error('Failed to update follow status');
+      }
+    } catch (error) {
+      console.error('Error updating follow status:', error);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -84,23 +164,48 @@ export default function Profile() {
   return (
     <div className="py-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">My Travel Stories</h2>
-        <Button asChild className="flex items-center gap-1">
-          <Link href="/admin/blog/create">
-            <PlusCircle className="h-4 w-4" />
-            New Story
-          </Link>
-        </Button>
+        <h2 className="text-2xl font-semibold">
+          {isOwnProfile ? "My Travel Stories" : `${userDisplayName}'s Travel Stories`}
+        </h2>
+        
+        {isOwnProfile ? (
+          <Button asChild className="flex items-center gap-1">
+            <Link href="/admin/blog/create">
+              <PlusCircle className="h-4 w-4" />
+              New Story
+            </Link>
+          </Button>
+        ) : (
+          <Button 
+            variant={isFollowing ? "outline" : "default"}
+            className="flex items-center gap-1"
+            onClick={handleFollow}
+            disabled={followLoading}
+          >
+            {followLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : isFollowing ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <UserPlus className="h-4 w-4" />
+            )}
+            {isFollowing ? "Following" : "Follow"}
+          </Button>
+        )}
       </div>
       
       {blogs.length === 0 ? (
         <div className="text-center py-10 border border-dashed rounded-lg">
           <p className="text-muted-foreground mb-4">
-            You haven't shared any travel stories yet.
+            {isOwnProfile 
+              ? "You haven't shared any travel stories yet."
+              : `${userDisplayName} hasn't shared any travel stories yet.`}
           </p>
-          <Button asChild>
-            <Link href="/admin/blog/create">Create Your First Story</Link>
-          </Button>
+          {isOwnProfile && (
+            <Button asChild>
+              <Link href="/admin/blog/create">Create Your First Story</Link>
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

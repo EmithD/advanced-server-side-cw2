@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { 
   NavigationMenu, 
@@ -13,7 +14,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Plane, Menu, Search, PenLine } from 'lucide-react';
 import {
   Sheet,
@@ -32,6 +33,21 @@ export default function TravelBlogLayout({
 }>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUserId(parsedUser?.id || null);
+        } catch (error) {
+          console.error('Failed to parse user from localStorage:', error);
+        }
+      }
+    }
+  }, []);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,7 +62,7 @@ export default function TravelBlogLayout({
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
         <div className="container mx-auto grid grid-cols-3 h-16 items-center">
           <div className="flex items-start">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/admin" className="flex items-center space-x-2">
               <Plane className="h-6 w-6 text-primary" />
               <span className="text-xl font-bold">Travel Tales</span>
             </Link>
@@ -57,7 +73,7 @@ export default function TravelBlogLayout({
               <NavigationMenuList className="flex space-x-4">
                 <NavigationMenuItem>
                   <Link 
-                    href="/" 
+                    href="/admin" 
                     className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                   >
                     Home
@@ -65,7 +81,7 @@ export default function TravelBlogLayout({
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link 
-                    href="/about"
+                    href="/admin/about"
                     className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                   >
                     About
@@ -73,7 +89,7 @@ export default function TravelBlogLayout({
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link 
-                    href="/help"
+                    href="/admin/help"
                     className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                   >
                     Help
@@ -118,14 +134,15 @@ export default function TravelBlogLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/api/placeholder/32/32" alt="Profile" />
                     <AvatarFallback>WT</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem>
-                  <Link href="/admin/profile" className="w-full">Profile</Link>
+                  <Link href={userId ? `/admin/profile/${userId}` : '/admin/profile/'} className="w-full">
+                    Profile
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link href="/sign-out" className="w-full">Sign Out</Link>
@@ -138,7 +155,7 @@ export default function TravelBlogLayout({
 
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
         <div className="container mx-auto flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/admin" className="flex items-center space-x-2">
             <Plane className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold">Travel Tales</span>
           </Link>
@@ -160,14 +177,15 @@ export default function TravelBlogLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/api/placeholder/32/32" alt="Profile" />
                     <AvatarFallback>WT</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem>
-                  <Link href="/profile" className="w-full">Profile</Link>
+                  <Link href={userId ? `/admin/profile/${userId}` : '/admin/profile/'} className="w-full">
+                    Profile
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link href="/sign-out" className="w-full">Sign Out</Link>
@@ -208,7 +226,7 @@ export default function TravelBlogLayout({
                   <nav className="flex flex-col space-y-4 py-6">
                     <SheetClose asChild>
                       <Link 
-                        href="/"
+                        href="/admin"
                         className="flex py-2 px-3 rounded-md hover:bg-accent font-medium"
                       >
                         Home
@@ -216,7 +234,7 @@ export default function TravelBlogLayout({
                     </SheetClose>
                     <SheetClose asChild>
                       <Link 
-                        href="/about"
+                        href="/admin/about"
                         className="flex py-2 px-3 rounded-md hover:bg-accent font-medium"
                       >
                         About
@@ -224,7 +242,7 @@ export default function TravelBlogLayout({
                     </SheetClose>
                     <SheetClose asChild>
                       <Link 
-                        href="/help"
+                        href="/admin/help"
                         className="flex py-2 px-3 rounded-md hover:bg-accent font-medium"
                       >
                         Help
@@ -249,11 +267,6 @@ export default function TravelBlogLayout({
           <p className="text-sm text-muted-foreground text-center md:text-left">
             © {new Date().getFullYear()} Travel Tales Travel Blog. All rights reserved.
           </p>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <Link href="/terms" className="hover:underline">Terms</Link>
-            <Link href="/privacy" className="hover:underline">Privacy</Link>
-            <Link href="/contact" className="hover:underline">Contact</Link>
-          </div>
         </div>
       </footer>
     </div>

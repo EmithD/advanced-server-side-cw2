@@ -45,7 +45,11 @@ const CreateBlog = () => {
       setCountryError(null);
       
       try {
-        const response = await fetch('/api/countries');
+        const response = await fetch('/api/countries', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
         
         if (!response.ok) {
           throw new Error(`Failed to fetch countries: ${response.status}`);
@@ -94,56 +98,56 @@ const CreateBlog = () => {
       );
 
   const handleSave = async () => {
-    if (!title) {
-      toast.error("Please enter a title for your blog post");
-      return;
-    }
+    
+  if (!title) {
+    toast.error("Please enter a title for your blog post");
+    return;
+  }
 
-    if (!country) {
-      toast.error("Please select a country for your blog post");
-      return;
-    }
+  if (!country) {
+    toast.error("Please select a country for your blog post");
+    return;
+  }
 
-    const editorContent = editorRef.current?.getHTML() || '';
-    const isEmpty = editorRef.current?.isEmpty() || true;
+  const editorContent = editorRef.current?.getHTML() || '';
+  
+  const isContentEmpty = 
+    !editorContent || 
+    editorContent === '<p></p>' || 
+    editorContent.replace(/<[^>]*>/g, '').trim() === '';
+  
+  if (isContentEmpty) {
+    toast.error("Please write some content for your blog post");
+    return;
+  }
 
-    if (!editorContent || isEmpty) {
-      toast.error("Please write some content for your blog post");
-      return;
-    }
+  setSaving(true);
 
-    setSaving(true);
+  const selectedCountry = countries.find((c) => c.value === country);
 
-    // Get the country label for saving
-    const selectedCountry = countries.find(c => c.value === country)?.label || '';
-
-    // Prepare the blog post data
-    const blogPost = {
-      title,
-      country: country,
-      countryName: selectedCountry,
-      content: editorContent,
-      createdAt: new Date().toISOString(),
-    };
+  const blogPost = {
+    title,
+    country_code: country,
+    country_name: selectedCountry?.label,
+    content: editorContent,
+  };
 
     try {
-      const response = await fetch('/api/blog-posts', {
+      const response = await fetch('/api/blogs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
         body: JSON.stringify(blogPost),
       });
       
-      // if (!response.ok) {
-      //   throw new Error('Failed to save blog post');
-      // }
+      if (!response.ok) {
+        throw new Error('Failed to save blog post');
+      }
 
-      // Success message
       toast.success("Blog post saved successfully!");
-      
-      // Optional: Clear form or redirect to the published post
-      // router.push('/blog');
+      window.location.href = '/admin';
     } catch (error) {
       console.error('Error saving blog post:', error);
       toast.error("Failed to save blog post. Please try again.");
@@ -272,6 +276,7 @@ const CreateBlog = () => {
           size="lg"
         >
           {saving ? 'Saving...' : 'Save Blog Post'}
+
           <Save className="ml-2 h-5 w-5" />
         </Button>
       </div>

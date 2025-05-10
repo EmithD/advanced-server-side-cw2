@@ -6,17 +6,17 @@ export const restCountriesController = async (req, res) => {
 
     try {
 
-        const api_key = req.body.apiKey;
+        // const api_key = req.body.apiKey;
         const search_type = req.body.searchType;
         const search_query = req.body.searchQuery;
 
-        const api_key_data = await ApiKeyModel.getAPIKeyByKey(api_key);
+        // const api_key_data = await ApiKeyModel.getAPIKeyByKey(api_key);
 
-        if (!api_key_data) {
-            return res.status(404).json({ error: 'API key not found' });
-        }
+        // if (!api_key_data) {
+        //     return res.status(404).json({ error: 'API key not found' });
+        // }
 
-        await ApiKeyUsageModel.createUsageRecord(api_key, `${search_type}/${search_query}`)
+        // await ApiKeyUsageModel.createUsageRecord(api_key, `${search_type}/${search_query}`)
 
         const country_data = await fetch(`https://restcountries.com/v3.1/${search_type}/${search_query}`);
         const country_data_json = await country_data.json();

@@ -26,6 +26,7 @@ const initDb = async () => {
           user_id TEXT NOT NULL,
           title TEXT NOT NULL,
           country_code TEXT NOT NULL,
+          country_name TEXT NOT NULL,
           content TEXT NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`,

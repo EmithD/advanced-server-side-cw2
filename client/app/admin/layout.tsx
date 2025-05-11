@@ -97,8 +97,7 @@ export default function TravelBlogLayout({
 
   const navItems = useMemo(() => [
     { href: '/admin', label: 'Home' },
-    { href: '/admin/about', label: 'About' },
-    { href: '/admin/help', label: 'Help' },
+    { href: '/admin/countries', label: 'Countries' }
   ], []);
 
   const profileLink = useMemo(() => 

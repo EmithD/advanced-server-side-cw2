@@ -1,136 +1,57 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import RichTextEditor, { RichTextEditorRef } from '@/components/rich-text-editor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-
-interface Country {
-  value: string;
-  label: string;
-}
+import CountryDropdown from '@/components/CountriesDropDown';
 
 const CreateBlog = () => {
   const [title, setTitle] = useState('');
   const [country, setCountry] = useState('');
-  const [open, setOpen] = useState(false);
+  const [countryName, setCountryName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [loadingCountries, setLoadingCountries] = useState(false);
-  const [countryError, setCountryError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const editorRef = useRef<RichTextEditorRef>(null);
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      setLoadingCountries(true);
-      setCountryError(null);
-      
-      try {
-        const response = await fetch('/api/countries', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch countries: ${response.status}`);
-        }
-        
-        const data = await response.json();
-
-        const formattedCountries: Country[] = data.data
-          .map((country: any) => ({
-            value: country.id,
-            label: country.common_name
-          }))
-          .sort((a: Country, b: Country) => a.label.localeCompare(b.label));
-        
-        setCountries(formattedCountries);
-      } catch (error) {
-        console.error('Error fetching countries:', error);
-        setCountryError('Failed to load countries. Using fallback list.');
-
-        //Fallback
-        setCountries([
-          { value: 'fr', label: 'France' },
-          { value: 'it', label: 'Italy' },
-          { value: 'jp', label: 'Japan' },
-          { value: 'th', label: 'Thailand' },
-          { value: 'us', label: 'United States' },
-          { value: 'au', label: 'Australia' },
-          { value: 'in', label: 'India' },
-          { value: 'br', label: 'Brazil' },
-          { value: 'za', label: 'South Africa' },
-          { value: 'ca', label: 'Canada' },
-          { value: 'other', label: 'Other' },
-        ]);
-      } finally {
-        setLoadingCountries(false);
-      }
-    };
-
-    fetchCountries();
-  }, []);
-
-  const filteredCountries = searchQuery === '' 
-    ? countries 
-    : countries.filter((country) =>
-        country.label.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const handleCountrySelect = (countryCode: string, _countryData?: any, selectedCountryName?: string) => {
+    setCountry(countryCode);
+    setCountryName(selectedCountryName || '');
+  };
 
   const handleSave = async () => {
+    if (!title) {
+      toast.error("Please enter a title for your blog post");
+      return;
+    }
+
+    if (!country) {
+      toast.error("Please select a country for your blog post");
+      return;
+    }
+
+    const editorContent = editorRef.current?.getHTML() || '';
     
-  if (!title) {
-    toast.error("Please enter a title for your blog post");
-    return;
-  }
+    const isContentEmpty = 
+      !editorContent || 
+      editorContent === '<p></p>' || 
+      editorContent.replace(/<[^>]*>/g, '').trim() === '';
+    
+    if (isContentEmpty) {
+      toast.error("Please write some content for your blog post");
+      return;
+    }
 
-  if (!country) {
-    toast.error("Please select a country for your blog post");
-    return;
-  }
+    setSaving(true);
 
-  const editorContent = editorRef.current?.getHTML() || '';
-  
-  const isContentEmpty = 
-    !editorContent || 
-    editorContent === '<p></p>' || 
-    editorContent.replace(/<[^>]*>/g, '').trim() === '';
-  
-  if (isContentEmpty) {
-    toast.error("Please write some content for your blog post");
-    return;
-  }
-
-  setSaving(true);
-
-  const selectedCountry = countries.find((c) => c.value === country);
-
-  const blogPost = {
-    title,
-    country_code: country,
-    country_name: selectedCountry?.label,
-    content: editorContent,
-  };
+    const blogPost = {
+      title,
+      country_code: country,
+      country_name: countryName,
+      content: editorContent,
+    };
 
     try {
       const response = await fetch('/api/blogs', {
@@ -173,75 +94,13 @@ const CreateBlog = () => {
         </div>
         
         <div>
-          <Label htmlFor="country" className="text-lg mb-2 block">Country</Label>
-          {countryError && (
-            <p className="text-xs text-red-500 mb-1">{countryError}</p>
-          )}
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between h-10"
-                id="country"
-                disabled={loadingCountries}
-              >
-                {loadingCountries ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : country ? (
-                  countries.find((item) => item.value === country)?.label || "Select a country"
-                ) : (
-                  "Select a country"
-                )}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput 
-                  placeholder="Search country..." 
-                  value={searchQuery}
-                  onValueChange={setSearchQuery}
-                />
-                <CommandList>
-                  {loadingCountries ? (
-                    <div className="py-6 text-center">
-                      <Loader2 className="mx-auto h-6 w-6 animate-spin opacity-70" />
-                      <p className="text-sm text-muted-foreground pt-2">Loading countries...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <CommandEmpty>No country found.</CommandEmpty>
-                      <CommandGroup className="max-h-60 overflow-auto">
-                        {filteredCountries.map((item) => (
-                          <CommandItem
-                            key={item.value}
-                            onSelect={() => {
-                              setCountry(item.value === country ? "" : item.value);
-                              setSearchQuery('');
-                              setOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                country === item.value ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {item.label}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </>
-                  )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <CountryDropdown
+            onCountrySelect={handleCountrySelect}
+            selectedCountryCode={country}
+            label="Country"
+            placeholder="Select a country"
+            fetchDetails={false}
+          />
         </div>
       </div>
       

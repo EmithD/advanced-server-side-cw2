@@ -114,7 +114,7 @@ const EditBlog = () => {
         const data = await response.json();
 
         const formattedCountries: Country[] = data.data
-          .map((country: any) => ({
+          .map((country: { id: string; common_name: string; official_name: string }) => ({
             value: country.id,
             label: country.common_name
           }))
@@ -166,7 +166,7 @@ const EditBlog = () => {
 
     const selectedCountry = countries.find((c) => c.value === country);
 
-    const updatedFields: any = {};
+    const updatedFields: { title?: string; country_code?: string; country_name?: string; content?: string } = {};
 
     if (!originalData) {
       toast.error("Original blog data is missing");

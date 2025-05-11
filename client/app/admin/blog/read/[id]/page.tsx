@@ -10,11 +10,6 @@ import {
   Loader2, 
   Clock,
   MapPin,
-  Flag,
-  Building2,
-  Globe,
-  Languages,
-  Coins,
   Edit,
   Trash2
 } from 'lucide-react';
@@ -22,11 +17,11 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
-import Image from 'next/image';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,30 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-interface CountryInfo {
-  name: {
-    common: string;
-    official: string;
-  };
-  flags: {
-    svg: string;
-  };
-  capital: string;
-  currencies: {
-    [code: string]: {
-      name: string;
-      symbol: string;
-    };
-  };
-  languages: {
-    [code: string]: string;
-  };
-  population: number;
-  region: string;
-  subregion?: string;
-  timezones: string[];
-}
+import CountryInfoCard from '@/components/CountryInfoCard';
 
 interface Comment {
   id: string;
@@ -294,10 +266,6 @@ export default function BlogDetail() {
     }
   };
 
-  const formatNumber = (num: number): string => {
-    return new Intl.NumberFormat().format(num);
-  };
-
   if (loading) {
     return (
       <div className="container mx-auto max-w-4xl py-8 px-4">
@@ -431,120 +399,11 @@ export default function BlogDetail() {
         </div>
       </div>
 
-      <Card className="mb-10 bg-muted/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
-            <Globe className="h-5 w-5 mr-2 text-primary" />
-            About {blog.country_name}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="min-h-[200px]">
-            {loadingCountryInfo ? (
-              <div className="flex justify-center p-4">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : countryInfo ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col space-y-3">
-                {countryInfo.flags.svg && (
-                  <div className="flex items-center">
-                    <Flag className="h-4 w-4 mr-2 text-primary" />
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium mr-2">Flag:</span>
-                        <div className="w-16 h-12 relative mr-2">
-                          <Image 
-                            src={countryInfo.flags.svg} 
-                            alt={`${countryInfo.name.common} flag`} 
-                            fill 
-                            style={{ objectFit: 'contain' }}
-                            sizes="64px" 
-                          />
-                        </div>
-                    </div>
-                  </div>
-                )}
-                
-                {countryInfo.capital && (
-                  <div className="flex items-center">
-                    <Building2 className="h-4 w-4 mr-2 text-primary" />
-                    <span className="text-sm font-medium mr-2">Capital:</span>
-                    <span>{countryInfo.capital}</span>
-                  </div>
-                )}
-                
-                {countryInfo.currencies && Object.keys(countryInfo.currencies).length > 0 && (
-                  <div className="flex items-center">
-                    <Coins className="h-4 w-4 mr-2 text-primary" />
-                    <span className="text-sm font-medium mr-2">Currency:</span>
-                    <span>
-                      {Object.entries(countryInfo.currencies).map(([code, currency], index, array) => (
-                        <span key={code}>
-                          {currency.name}
-                          {currency.symbol && ` (${currency.symbol})`}
-                          {index < array.length - 1 ? ', ' : ''}
-                        </span>
-                      ))}
-                    </span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex flex-col space-y-3">
-                {countryInfo.languages && Object.keys(countryInfo.languages).length > 0 && (
-                  <div className="flex items-start">
-                    <Languages className="h-4 w-4 mr-2 mt-0.5 text-primary" />
-                    <div>
-                      <span className="text-sm font-medium mr-2">Languages:</span>
-                      <span>{Object.values(countryInfo.languages).join(', ')}</span>
-                    </div>
-                  </div>
-                )}
-                
-                {countryInfo.population && (
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mr-2 text-primary">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="9" cy="7" r="4"></circle>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                    <span className="text-sm font-medium mr-2">Population:</span>
-                    <span>{formatNumber(countryInfo.population)}</span>
-                  </div>
-                )}
-                
-                {countryInfo.region && (
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-primary" />
-                    <span className="text-sm font-medium mr-2">Region:</span>
-                    <span>
-                      {countryInfo.region}
-                      {countryInfo.subregion && ` (${countryInfo.subregion})`}
-                    </span>
-                  </div>
-                )}
-
-                  {countryInfo.timezones && countryInfo.timezones.length > 0 && (
-                    <div className="flex items-start">
-                      <Clock className="h-4 w-4 mr-2 mt-0.5 text-primary" />
-                      <div>
-                        <span className="text-sm font-medium mr-2">Timezones:</span>
-                        <span>{countryInfo.timezones.join(', ')}</span>
-                      </div>
-                    </div>
-                  )}
-
-              </div>
-            </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-2">
-                No additional information available for this country.
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <CountryInfoCard
+        country={countryInfo}
+        loading={loadingCountryInfo}
+        className="mb-10 bg-muted/30"
+      />
       
       <div className="prose prose-lg max-w-none mb-10 min-h-[300px] will-change-contents">
         <div className="w-full" style={{ minHeight: '300px', contain: 'layout' }}>

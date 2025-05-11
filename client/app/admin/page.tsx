@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
 import BlogCard, { BlogPost } from '@/components/BlogCard';
+import BlogCardSkeleton from '@/components/BlogCardSkeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const BlogLand = () => {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
@@ -39,10 +40,19 @@ const BlogLand = () => {
   }, []);
 
   if (loading) {
+
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-lg text-muted-foreground">Loading travel stories...</p>
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-6 w-full max-w-md" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array(6).fill(0).map((_, index) => (
+            <BlogCardSkeleton key={index} />
+          ))}
+        </div>
       </div>
     );
   }

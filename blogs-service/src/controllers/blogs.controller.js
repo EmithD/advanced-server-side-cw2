@@ -155,3 +155,40 @@ export const deleteBlogController = async (req, res) => {
         });
     }
 };
+
+export const updateBlogController = async (req, res) => {
+    try {
+        const blogId = req.params.id;
+        const blog = await BlogModel.getBlogById(blogId);
+
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                error: "Blog not found."
+            });
+        }
+
+        const updateData = {};
+        const blogData = req.body.blog;
+
+        if (blogData.title !== undefined) updateData.title = blogData.title;
+        if (blogData.content !== undefined) updateData.content = blogData.content;
+        if (blogData.country_code !== undefined) updateData.country_code = blogData.country_code;
+        if (blogData.country_name !== undefined) updateData.country_name = blogData.country_name;
+
+        if (Object.keys(updateData).length > 0) {
+            await BlogModel.updateBlog(blogId, updateData);
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: "Blog updated successfully."
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};

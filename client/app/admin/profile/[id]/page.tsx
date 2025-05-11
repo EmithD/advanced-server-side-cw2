@@ -27,7 +27,6 @@ export default function Profile() {
         return;
       }
 
-      // Check if this is the logged-in user's profile
       const user = localStorage.getItem('user');
       const userData = user ? JSON.parse(user) : null;
       const loggedInUserId = userData ? userData.id : null;
@@ -37,7 +36,6 @@ export default function Profile() {
         setLoading(true);
         console.log('Fetching user data for userId:', userId);
         
-        // Fetch user's blogs
         const blogsResponse = await fetch(`/api/blogs/user/${userId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -50,13 +48,12 @@ export default function Profile() {
         
         const blogsData = await blogsResponse.json();
         setBlogs(blogsData.data || []);
-        
-        // If there are blogs, get the user's display name from the first blog
+
         if (blogsData.data && blogsData.data.length > 0 && blogsData.data[0].user) {
           setUserDisplayName(blogsData.data[0].user.display_name || "User");
         } else {
-          // Otherwise, fetch user information directly
-          const userResponse = await fetch(`/api/users/${userId}`, {
+
+          const userResponse = await fetch(`/api/auth/profile/${userId}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
@@ -64,12 +61,10 @@ export default function Profile() {
           
           if (userResponse.ok) {
             const userData = await userResponse.json();
-            setUserDisplayName(userData.display_name || "User");
+            setUserDisplayName(userData.data.user.display_name || "User");
           }
         }
-        
-        // Check if logged-in user follows this user
-        // Note: This is a placeholder. Implement actual follow status check based on your API
+
         if (!isOwnProfile && loggedInUserId) {
           try {
             const followResponse = await fetch(`/api/follow/check`, {

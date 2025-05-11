@@ -109,14 +109,21 @@ export const deleteBlog = (id) => {
 };
 
 export const updateBlog = async (id, blogData) => {
-    const { title, content, country_code, country_name } = blogData;
+    if (!blogData || Object.keys(blogData).length === 0) {
+        return Promise.resolve({ changes: 0 });
+    }
 
+    const fields = Object.keys(blogData);
+    const values = fields.map(field => blogData[field]);
+
+    const setClause = fields.map(field => `${field} = ?`).join(', ');
+
+    values.push(id);
+    
     return new Promise((resolve, reject) => {
         db.run(
-            `UPDATE blogs 
-             SET title = ?, content = ?, country_code = ?, country_name = ? 
-             WHERE id = ?`,
-            [title, content, country_code, country_name, id],
+            `UPDATE blogs SET ${setClause} WHERE id = ?`,
+            values,
             function (err) {
                 if (err) {
                     reject(err);

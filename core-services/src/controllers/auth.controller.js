@@ -105,3 +105,34 @@ export const getUserProfile = async (req, res) => {
     }
 
 }
+
+export const getProfileById = async (req, res) => {
+
+    try {
+
+        const userId = await req.params.id;
+        const user = await UserModel.findUserById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                user: {
+                    id: user.id,
+                    display_name: user.display_name,
+                    email: user.email,
+                },
+            }
+        });
+
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            error: "User not authenticated"
+        });
+    }
+
+}

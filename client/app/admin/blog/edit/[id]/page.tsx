@@ -34,19 +34,24 @@ const EditBlog = () => {
   const router = useRouter();
   const blogId = params.id;
   
+  const [originalData, setOriginalData] = useState<{
+    title: string;
+    country_code: string;
+    country_name: string;
+    content: string;
+  } | null>(null);
   const [title, setTitle] = useState('');
   const [country, setCountry] = useState('');
   const [blogContent, setBlogContent] = useState('');
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true); // Start with loading as true
+  const [loading, setLoading] = useState(true);
   const [countries, setCountries] = useState<Country[]>([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [countryError, setCountryError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const editorRef = useRef<RichTextEditorRef>(null);
 
-  // Fetch blog data
   useEffect(() => {
     const fetchBlogData = async () => {
       if (!blogId) {
@@ -67,6 +72,13 @@ const EditBlog = () => {
         
         const data = await response.json();
         const blogData = data.data;
+
+        setOriginalData({
+          title: blogData.title,
+          country_code: blogData.country_code,
+          country_name: blogData.country_name,
+          content: blogData.content,
+        });
 
         setTitle(blogData.title);
         setCountry(blogData.country_code);
@@ -113,20 +125,6 @@ const EditBlog = () => {
         console.error('Error fetching countries:', error);
         setCountryError('Failed to load countries. Using fallback list.');
 
-        //Fallback
-        setCountries([
-          { value: 'fr', label: 'France' },
-          { value: 'it', label: 'Italy' },
-          { value: 'jp', label: 'Japan' },
-          { value: 'th', label: 'Thailand' },
-          { value: 'us', label: 'United States' },
-          { value: 'au', label: 'Australia' },
-          { value: 'in', label: 'India' },
-          { value: 'br', label: 'Brazil' },
-          { value: 'za', label: 'South Africa' },
-          { value: 'ca', label: 'Canada' },
-          { value: 'other', label: 'Other' },
-        ]);
       } finally {
         setLoadingCountries(false);
       }
@@ -168,21 +166,42 @@ const EditBlog = () => {
 
     const selectedCountry = countries.find((c) => c.value === country);
 
-    const blogPost = {
-      title,
-      country_code: country,
-      country_name: selectedCountry?.label,
-      content: editorContent,
-    };
+    const updatedFields: any = {};
+
+    if (!originalData) {
+      toast.error("Original blog data is missing");
+      setSaving(false);
+      return;
+    }
+
+    if (title !== originalData.title) {
+      updatedFields.title = title;
+    }
+
+    if (country !== originalData.country_code) {
+      updatedFields.country_code = country;
+      updatedFields.country_name = selectedCountry?.label;
+    }
+
+    if (editorContent !== originalData.content) {
+      updatedFields.content = editorContent;
+    }
+
+    if (Object.keys(updatedFields).length === 0) {
+      toast.info("No changes detected");
+      setSaving(false);
+      return;
+    }
 
     try {
+
       const response = await fetch(`/api/blogs/${blogId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
-        body: JSON.stringify(blogPost),
+        body: JSON.stringify(updatedFields),
       });
       
       if (!response.ok) {
@@ -300,7 +319,7 @@ const EditBlog = () => {
       <div className="mb-8">
         <RichTextEditor 
           ref={editorRef}
-          initialContent={blogContent} // Pass the blog content as the initial content
+          initialContent={blogContent}
           placeholder="Start writing your amazing travel story..."
           minHeight="400px"
         />

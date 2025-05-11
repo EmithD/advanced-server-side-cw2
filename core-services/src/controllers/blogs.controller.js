@@ -115,8 +115,6 @@ export const getBlogByIdController = async (req, res) => {
             }
 
             await Promise.all(commentUserPromises);
-        } else {
-            console.log("No comments found for this blog post");
         }
 
 
@@ -262,4 +260,39 @@ export const deleteBlogController = async (req, res) => {
         console.error('Error in deleteBlogController:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
-} 
+}
+
+export const updateBlogController = async (req, res) => {
+    try {
+        const blogId = req.params.id;
+        const blog = await req.body;
+
+        const updateRes = await fetch(`${process.env.BLOG_BE_URL}/api/blogs/${blogId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                blog: {
+                    country_code: blog.country_code,
+                    country_name: blog.country_name,
+                    title: blog.title,
+                    content: blog.content
+                }
+            })
+        });
+
+        if (!updateRes.ok) {
+            return res.status(500).json({ error: "Update Res from 3001 failed."})
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: "Blog updated."
+        });
+
+    } catch (error) {
+        console.error('Error in updateBlogController:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}

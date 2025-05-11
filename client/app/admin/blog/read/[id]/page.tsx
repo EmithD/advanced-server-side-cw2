@@ -300,9 +300,26 @@ export default function BlogDetail() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-lg text-muted-foreground">Loading blog post...</p>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-10 w-32 bg-muted animate-pulse rounded"></div>
+          <div className="h-10 w-24 bg-muted animate-pulse rounded"></div>
+        </div>
+        
+        <div className="mb-8">
+          <div className="h-8 w-40 bg-muted animate-pulse rounded mb-4"></div>
+          <div className="h-10 w-full bg-muted animate-pulse rounded mb-4"></div>
+          <div className="h-6 w-48 bg-muted animate-pulse rounded mb-6"></div>
+        </div>
+        
+        <div className="h-64 w-full bg-muted animate-pulse rounded mb-10"></div>
+        
+        <div className="h-[400px] w-full bg-muted animate-pulse rounded mb-8"></div>
+        
+        <div className="flex items-center space-x-6 mb-8">
+          <div className="h-10 w-24 bg-muted animate-pulse rounded"></div>
+          <div className="h-10 w-32 bg-muted animate-pulse rounded"></div>
+        </div>
       </div>
     );
   }
@@ -387,21 +404,21 @@ export default function BlogDetail() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="mb-8">
-        <div className="flex flex-wrap gap-2 items-center mb-4">
-          <Badge variant="outline" className="flex items-center gap-1">
+      <div className="mb-8 min-h-[120px]">
+        <div className="flex flex-wrap gap-2 items-center mb-4 min-h-[24px]">
+          <Badge variant="outline" className="flex items-center gap-1 h-6">
             <MapPin className="h-3 w-3" />
             {blog.country_name}
           </Badge>
-          <span className="text-sm text-muted-foreground flex items-center">
+          <span className="text-sm text-muted-foreground flex items-center h-6">
             <Clock className="h-3 w-3 mr-1" />
             {format(new Date(blog.created_at), 'MMMM d, yyyy')}
           </span>
         </div>
         
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{blog.title}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-4 min-h-[2.5rem] md:min-h-[3rem]">{blog.title}</h1>
         
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-6 h-8">
           <Avatar className="h-8 w-8 mr-2">
             <AvatarFallback>{blog.user.display_name?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
@@ -422,11 +439,12 @@ export default function BlogDetail() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loadingCountryInfo ? (
-            <div className="flex justify-center p-4">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : countryInfo ? (
+          <div className="min-h-[200px]">
+            {loadingCountryInfo ? (
+              <div className="flex justify-center p-4">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : countryInfo ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col space-y-3">
                 {countryInfo.flags.svg && (
@@ -434,7 +452,15 @@ export default function BlogDetail() {
                     <Flag className="h-4 w-4 mr-2 text-primary" />
                     <div className="flex items-center">
                       <span className="text-sm font-medium mr-2">Flag:</span>
-                      <Image src={countryInfo.flags.svg} alt={`${countryInfo.name.common} flag`} width={64} height={64} className="mr-2" />
+                        <div className="w-16 h-12 relative mr-2">
+                          <Image 
+                            src={countryInfo.flags.svg} 
+                            alt={`${countryInfo.name.common} flag`} 
+                            fill 
+                            style={{ objectFit: 'contain' }}
+                            sizes="64px" 
+                          />
+                        </div>
                     </div>
                   </div>
                 )}
@@ -511,16 +537,19 @@ export default function BlogDetail() {
 
               </div>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-2">
-              No additional information available for this country.
-            </p>
-          )}
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-2">
+                No additional information available for this country.
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
       
-      <div className="prose prose-lg max-w-none mb-10">
-        <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+      <div className="prose prose-lg max-w-none mb-10 min-h-[300px] will-change-contents">
+        <div className="w-full" style={{ minHeight: '300px', contain: 'layout' }}>
+          <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+        </div>
       </div>
 
       <div className="flex items-center space-x-6 mb-8">
@@ -579,7 +608,7 @@ export default function BlogDetail() {
         </form>
       </div>
 
-      <div>
+      <div className="min-h-[200px]">
         <h3 className="text-lg font-medium mb-4">Comments ({comments.length})</h3>
         
         {comments.length === 0 ? (

@@ -192,3 +192,32 @@ export const updateBlogController = async (req, res) => {
         });
     }
 };
+
+export const getBlogsByUsersController = async (req, res) => {
+    try {
+        const userIds = req.body.user_ids;
+        const blogs = await BlogModel.getBlogsByUsers(userIds);
+
+        for (const blog of blogs) {
+            const likes = await LikeModel.getLikesByPostId(blog.id);
+            const comments = await CommentModel.getCommentsByPostId(blog.id);
+            blog.likes = {
+                count: likes.length,
+            };
+            blog.comments = {
+                count: comments.length,
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: blogs
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}

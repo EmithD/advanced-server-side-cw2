@@ -285,7 +285,7 @@ export default function Profile() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {blogs.map((blog) => (
-            <BlogCard 
+            <BlogCard
               key={blog.id} 
               blog={blog} 
               linkPath={`/admin/blog/read/${blog.id}`} 

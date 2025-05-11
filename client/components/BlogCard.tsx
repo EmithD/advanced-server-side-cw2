@@ -12,11 +12,13 @@ import {
   MapPin, 
   Clock, 
   Heart, 
-  MessageCircle 
+  MessageCircle,
+  User
 } from 'lucide-react';
 
 export interface BlogPost {
   id: string;
+  user_id: string;
   title: string;
   content: string;
   country_code: string;
@@ -28,6 +30,10 @@ export interface BlogPost {
     count: number;
   };
   created_at: string;
+  user: {
+    display_name: string;
+    email: string;
+  }
 }
 
 interface BlogCardProps {
@@ -60,6 +66,13 @@ const BlogCard: React.FC<BlogCardProps> = ({
           </div>
         </div>
         <CardTitle className="line-clamp-2 text-xl">{blog.title}</CardTitle>
+        <Link 
+          href={`/admin/profile/${blog.user_id}`} 
+          className="flex items-center text-sm text-muted-foreground hover:text-primary mt-1"
+        >
+          <User className="h-3 w-3 mr-1" />
+          <span>{blog.user.display_name}</span>
+        </Link>
       </CardHeader>
       
       <CardContent className="flex-grow">

@@ -68,6 +68,23 @@ export const getBlogsByUserId = (user_id) => {
     });
 }
 
+export const getBlogsByUsers = (user_ids) => {
+    return new Promise(async (resolve, reject) => {
+        const placeholders = user_ids.map(() => '?').join(',');
+        db.all(
+            `SELECT * FROM blogs WHERE user_id IN (${placeholders})`,
+            user_ids,
+            (err, rows) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(rows);
+            }
+        );
+    });
+}
+
 export const deleteBlog = (id) => {
     return new Promise(async (resolve, reject) => {
         db.run('BEGIN TRANSACTION', (transErr) => {

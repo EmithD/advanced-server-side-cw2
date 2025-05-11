@@ -57,6 +57,16 @@ export const getBlogsController = async (_req, res) => {
         const blogsJson = await blogs.json();
         const blogsData = blogsJson.data;
 
+        for (const blog of blogsData) {
+            const userID = blog.user_id;
+            const user = await UserModel.findUserById(userID);
+            blog.user = {
+                user_id: user.id,
+                display_name: user.display_name,
+                email: user.email
+            };
+        };
+
         res.status(200).json({
             success: true,
             data: blogsData
@@ -228,6 +238,16 @@ export const getBlogsByUserIdController = async (req, res) => {
 
         const blogsJson = await blogs.json();
         const blogsData = blogsJson.data;
+
+        for (const blog of blogsData) {
+            const userID = blog.user_id;
+            const user = await UserModel.findUserById(userID);
+            blog.user = {
+                user_id: user.id,
+                display_name: user.display_name,
+                email: user.email
+            };
+        };
 
         res.status(200).json({
             success: true,

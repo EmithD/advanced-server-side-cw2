@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest, context: { params: { userId: string } }) {
-  const params = await context.params;
-  const { userId } = params;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  const userId = (await params).userId
   
   const authHeader = req.headers.get('Authorization');
   const token = authHeader?.split(' ')[1];

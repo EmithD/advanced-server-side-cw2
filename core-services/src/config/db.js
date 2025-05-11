@@ -42,7 +42,17 @@ const initDb = async () => {
           api_key TEXT NOT NULL,
           endpoint TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (api_key) REFERENCES api_keys (api_key)
+          FOREIGN KEY (api_key) REFERENCES api_keys (api_key) ON DELETE CASCADE
+        )`,
+
+        `CREATE TABLE IF NOT EXISTS follows (
+          id TEXT PRIMARY KEY,
+          follower_id TEXT NOT NULL,
+          following_id TEXT NOT NULL,
+          followed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (follower_id) REFERENCES users (id) ON DELETE CASCADE,
+          FOREIGN KEY (following_id) REFERENCES users (id) ON DELETE CASCADE,
+          CHECK (follower_id <> following_id)
         )`
       ];
 

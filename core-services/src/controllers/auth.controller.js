@@ -1,4 +1,5 @@
 import * as UserModel from '../models/User.js';
+import * as FollowModel from '../models/Follow.js';
 import { generateToken } from '../utils/jwtUtils.js';
 
 export const loginController = async (req, res) => {
@@ -117,6 +118,9 @@ export const getProfileById = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        const followers = await FollowModel.getFollowers(userId);
+        const following = await FollowModel.getFollowing(userId);
+
         res.status(200).json({
             success: true,
             data: {
@@ -124,6 +128,8 @@ export const getProfileById = async (req, res) => {
                     id: user.id,
                     display_name: user.display_name,
                     email: user.email,
+                    followers: followers,
+                    following: following,
                 },
             }
         });
@@ -132,6 +138,38 @@ export const getProfileById = async (req, res) => {
         res.status(401).json({
             success: false,
             error: "User not authenticated"
+        });
+    }
+
+}
+
+export const followUserController = async (req, res) => {
+
+    try {
+
+        const userId = await req.params.id;
+        const followerId = await req.user.id;
+
+        const result = await FollowModel.createFollow(followerId, userId);
+
+        if (result.success) {
+            res.status(200).json({
+                success: true,
+                data: {
+                    action: result.action,
+                }
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: 'Failed to follow/unfollow user'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error
         });
     }
 

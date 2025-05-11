@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
-  const { id } = await context.params;
+export async function GET(req: NextRequest,{ params }: { params: Promise<{ id: string }> }) {
+  const id = (await params).id
 
   const authHeader = req.headers.get('Authorization');
   const token = authHeader?.split(' ')[1];
@@ -26,8 +26,8 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
   return NextResponse.json(data);
 }
 
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
-  const { id } = await context.params;
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const id = (await params).id
 
   const authHeader = req.headers.get('Authorization');
   const token = authHeader?.split(' ')[1];
@@ -52,8 +52,8 @@ export async function DELETE(req: NextRequest, context: { params: { id: string }
   return NextResponse.json(data);
 }
 
-export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
-  const { id } = await context.params;
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const id = (await params).id
 
   const authHeader = req.headers.get('Authorization');
   const token = authHeader?.split(' ')[1];

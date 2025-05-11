@@ -242,7 +242,22 @@ export const getBlogsByUserIdController = async (req, res) => {
 
 export const deleteBlogController = async (req, res) => {
     try {
+
+        const user_id = req.user.id;
         const blogId = req.params.id;
+
+        const blogRes = await fetch(`${process.env.BLOG_BE_URL}/api/blogs/${req.params.id}`);
+        if (!blogRes.ok) {
+            return res.status(500).json({ error: "Blog Res from 3001 failed."})
+        }
+
+        const blogJson = await blogRes.json();
+        const blogData = blogJson.data;
+
+        if (blogData.user_id !== user_id) {
+            return res.status(403).json({ error: "You are not authorized to delete this blog."})
+        }
+
         const deleteRes = await fetch(`${process.env.BLOG_BE_URL}/api/blogs/${blogId}`, {
             method: "DELETE"
         });
@@ -266,6 +281,17 @@ export const updateBlogController = async (req, res) => {
     try {
         const blogId = req.params.id;
         const blog = await req.body;
+
+        const blogRes = await fetch(`${process.env.BLOG_BE_URL}/api/blogs/${blogId}`);
+        if (!blogRes.ok) {
+            return res.status(500).json({ error: "Blog Res from 3001 failed."})
+        }
+        const blogJson = await blogRes.json();
+        const blogData = blogJson.data;
+
+        if (blogData.user_id !== req.user.id) {
+            return res.status(403).json({ error: "You are not authorized to update this blog."})
+        }
 
         const updateRes = await fetch(`${process.env.BLOG_BE_URL}/api/blogs/${blogId}`, {
             method: "PATCH",

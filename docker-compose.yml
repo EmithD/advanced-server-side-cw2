@@ -8,7 +8,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - BE_URL="http://localhost:8080"
+      - BE_URL=http://core-services:8080
     depends_on:
       - blogs-service
       - core-services
@@ -23,7 +23,6 @@ services:
       - "3001:3001"
     environment:
       - PORT=3001
-      - ALLOWED_ORIGIN="http://localhost:8080"
     depends_on:
       - core-services
     networks:
@@ -41,8 +40,7 @@ services:
       - JWT_SECRET=thisisthesecretcrabbypattyrecipe
       - JWT_EXPIRY=48h
       - NODE_ENV="development"
-      - BLOG_BE_URL="http://localhost:3001"
-      - FRONTEND_URL="http://localhost:3000"
+      - BLOG_BE_URL=http://blogs-service:3001
     networks:
       - travel-tales-network
 

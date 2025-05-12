@@ -3,6 +3,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSearch, SearchProvider } from '@/context/SearchContext';
+import { SearchBar } from '@/components/SearchBar';
 import { 
   NavigationMenu, 
   NavigationMenuList, 
@@ -16,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Plane, Menu, Search, PenLine, User, LogOut } from 'lucide-react';
+import { Plane, Menu, PenLine, User, LogOut } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -25,7 +27,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Input } from '@/components/ui/input';
 
 const generateInitials = (displayName: string | undefined | null): string => {
   if (!displayName) return 'TT';
@@ -44,13 +45,9 @@ const generateInitials = (displayName: string | undefined | null): string => {
   return (firstInitial + lastInitial).toUpperCase();
 };
 
-export default function TravelBlogLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const TravelBlogLayoutContent = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const { setAllBlogs } = useSearch();
   const [userData, setUserData] = useState<{
     id: string | null;
     initials: string;
@@ -61,8 +58,36 @@ export default function TravelBlogLayout({
   
   const pathname = usePathname();
 
+  // Fetch blogs for search
   useEffect(() => {
+    const fetchBlogsForSearch = async () => {
+      try {
+        const authToken = typeof window !== 'undefined' 
+          ? localStorage.getItem('authToken') 
+          : null;
+        
+        const response = await fetch('/api/blogs', {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch blogs for search: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setAllBlogs(data.data || []);
+      } catch (error) {
+        console.error('Error fetching blogs for search:', error);
+      }
+    };
 
+    fetchBlogsForSearch();
+  }, [setAllBlogs]);
+
+  // Load user data
+  useEffect(() => {
     (function loadUserData() {
       if (typeof window === 'undefined') return;
 
@@ -81,15 +106,6 @@ export default function TravelBlogLayout({
       }
     })();
   }, []);
-
-  const handleSearch = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log('Searching for:', searchQuery);
-
-    if (isOpen) {
-      setIsOpen(false);
-    }
-  }, [searchQuery, isOpen]);
 
   const isLinkActive = useCallback((href: string) => {
     return pathname === href;
@@ -137,23 +153,11 @@ export default function TravelBlogLayout({
           </div>
 
           <div className="flex justify-end items-center space-x-4">
-            <form onSubmit={handleSearch} className="relative w-48">
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="pr-8 h-9 w-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search the site"
-              />
-              <button 
-                type="submit" 
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                aria-label="Submit search"
-              >
-                <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              </button>
-            </form>
+            <SearchBar 
+              className="w-48" 
+              hideOnMobile={true} 
+              onSearch={() => {}}
+            />
 
             <Button 
               variant="default" 
@@ -247,24 +251,10 @@ export default function TravelBlogLayout({
                   <SheetTitle>Travel Tales</SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col h-full">
-
-                  <form onSubmit={handleSearch} className="relative mt-6 mb-2">
-                    <Input
-                      type="search"
-                      placeholder="Search..."
-                      className="pr-8"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      aria-label="Search the site"
-                    />
-                    <button 
-                      type="submit" 
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                      aria-label="Submit search"
-                    >
-                      <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                    </button>
-                  </form>
+                  <SearchBar 
+                    placeholder="Search..." 
+                    onSearch={() => setIsOpen(false)} 
+                  />
 
                   <nav className="flex flex-col space-y-4 py-6">
                     {navItems.map((item) => (
@@ -301,5 +291,19 @@ export default function TravelBlogLayout({
         </div>
       </footer>
     </div>
+  );
+};
+
+export default function TravelBlogLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <SearchProvider>
+      <TravelBlogLayoutContent>
+        {children}
+      </TravelBlogLayoutContent>
+    </SearchProvider>
   );
 }

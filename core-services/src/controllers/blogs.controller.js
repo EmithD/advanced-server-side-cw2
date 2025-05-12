@@ -48,7 +48,6 @@ export const createBlogController = async (req, res) => {
 
 export const getBlogsController = async (_req, res) => {
     try {
-
         const blogs = await fetch(`${process.env.BLOG_BE_URL}/api/blogs`);
 
         if (!blogs.ok) {
@@ -61,11 +60,22 @@ export const getBlogsController = async (_req, res) => {
         for (const blog of blogsData) {
             const userID = blog.user_id;
             const user = await UserModel.findUserById(userID);
-            blog.user = {
-                user_id: user.id,
-                display_name: user.display_name,
-                email: user.email
-            };
+            
+            if (user) {
+                blog.user = {
+                    user_id: user.id,
+                    display_name: user.display_name,
+                    email: user.email
+                };
+            } else {
+                blog.user = {
+                    user_id: userID,
+                    display_name: "Unknown User",
+                    email: "unknown@example.com"
+                };
+                
+                console.warn(`User with ID ${userID} not found for blog ID ${blog.id || 'unknown'}`);
+            }
         };
 
         res.status(200).json({

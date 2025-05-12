@@ -6,7 +6,13 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const authenticateUser = (req, res, next) => {
-    const token = getTokenFromHeader(req);
+  try {
+
+    let token = req.cookies?.authToken;
+    
+    if (!token) {
+      token = getTokenFromHeader(req);
+    }
     
     if (!token) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -15,12 +21,26 @@ const authenticateUser = (req, res, next) => {
     const decoded = verifyToken(token);
     
     if (!decoded) {
+      if (req.cookies?.authToken) {
+        res.clearCookie('authToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          path: '/'
+        });
+      }
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
     
     req.user = decoded;
-    
     next();
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Server error during authentication'
+    });
+  }
 };
 
 const getTokenFromHeader = (req) => {

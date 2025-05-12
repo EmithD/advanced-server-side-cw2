@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import CountryInfoCard from '@/components/CountryInfoCard';
+import { useAuth } from '@/context/AuthContext';
 
 interface Comment {
   id: string;
@@ -73,6 +74,7 @@ interface BlogPost {
 export default function BlogDetail() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +90,8 @@ export default function BlogDetail() {
   const [deleting, setDeleting] = useState(false);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
+  const { isAuthenticated } = useAuth();
+
   useEffect(() => {
     const fetchBlogPost = async () => {
       try {
@@ -95,7 +99,7 @@ export default function BlogDetail() {
         
         const response = await fetch(`/api/blogs/${params.id}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Content-Type': 'application/json'
           }
         });
         
@@ -107,13 +111,10 @@ export default function BlogDetail() {
         setBlog(data.data);
         setLikeCount(data.data.likes?.count || 0);
 
-        const user = localStorage.getItem('user');
-        const userData = user ? JSON.parse(user) : null;
-        const userId = userData ? userData.id : null;
-
+        const userId = user ? user.id : null;
         setIsAuthor(userId === data.data.user_id);
 
-        const hasLiked: boolean = userId ? data.data.likes?.likedBy?.some((like: { user_id: string }) => like.user_id === userId) : false;
+        const hasLiked = userId ? data.data.likes?.likedBy?.some((like: { user_id: string }) => like.user_id === userId) : false;
         setLiked(hasLiked);
         
         setComments(data.data.comments?.commentedBy || []);
@@ -136,7 +137,7 @@ export default function BlogDetail() {
         const response = await fetch(`/api/countries/${countryCode}`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             searchType: 'alpha',
@@ -161,17 +162,23 @@ export default function BlogDetail() {
     if (params.id) {
       fetchBlogPost();
     }
-  }, [params.id]);
+  }, [params.id, user]);
 
   const handleLike = async () => {
+
+    if (!isAuthenticated) {
+      router.push('/auth/login');
+      return;
+    }
+
     try {
       setLiked(!liked);
       setLikeCount(prev => liked ? prev - 1 : prev + 1);
       
       const response = await fetch(`/api/blogs/like`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
@@ -196,8 +203,8 @@ export default function BlogDetail() {
       setDeleting(true);
       const response = await fetch(`/api/blogs/${params.id}`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -219,6 +226,11 @@ export default function BlogDetail() {
 
   const handleCommentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!isAuthenticated) {
+      router.push('/auth/login');
+      return;
+    }
     
     if (!commentText.trim()) {
       toast.error('Please enter a comment');
@@ -230,8 +242,8 @@ export default function BlogDetail() {
       
       const response = await fetch(`/api/blogs/comment`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 

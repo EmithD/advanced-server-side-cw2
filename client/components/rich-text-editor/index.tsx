@@ -89,20 +89,18 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
       onUpdate: ({ editor }) => {
         onChange?.(editor.getHTML());
       },
-      // Fix for SSR hydration issues in Next.js
+
       editable: true,
       autofocus: false,
       enableInputRules: true,
       enablePasteRules: true,
       injectCSS: false,
-      // Explicitly set to false for SSR
       immediatelyRender: false,
     });
 
-    // Set content when editor is ready and content has changed
     useEffect(() => {
       if (editor && initialContent !== '<p></p>' && !contentLoaded) {
-        // Using a timeout to ensure the editor is fully initialized
+
         setTimeout(() => {
           editor.commands.setContent(initialContent);
           setContentLoaded(true);
@@ -110,12 +108,10 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
       }
     }, [editor, initialContent, contentLoaded]);
 
-    // Reset contentLoaded flag when initialContent changes
     useEffect(() => {
       setContentLoaded(false);
     }, [initialContent]);
 
-    // Expose methods to parent component
     useImperativeHandle(ref, () => ({
       getHTML: () => editor?.getHTML() || '',
       getContent: () => editor?.getHTML() || '',
@@ -134,7 +130,6 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
         const reader = new FileReader();
         reader.onload = (e: ProgressEvent<FileReader>) => {
           if (e.target?.result) {
-            // Insert the image with proper attributes
             editor
               .chain()
               .focus()
@@ -144,7 +139,6 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
               })
               .run();
               
-            // Create a new paragraph after the image to continue typing
             setTimeout(() => {
               editor?.chain().focus().createParagraphNear().run();
             }, 10);
@@ -155,7 +149,6 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
     };
 
     const triggerImageUpload = (): void => {
-      // Trigger the hidden file input
       if (fileInputRef.current) {
         fileInputRef.current.click();
       }
@@ -165,14 +158,12 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
       if (!editor) return;
       
       if (linkUrl) {
-        // Ensure URL has proper protocol
         let formattedUrl = linkUrl;
         if (!/^https?:\/\//i.test(formattedUrl)) {
           formattedUrl = 'https://' + formattedUrl;
         }
         
         if (linkText) {
-          // If we have text, delete selection and insert link with text
           editor
             .chain()
             .focus()
@@ -181,7 +172,6 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
             .insertContent(`<a href="${formattedUrl}" target="_blank">${linkText}</a>`)
             .run();
         } else {
-          // Otherwise just set link on current selection
           editor
             .chain()
             .focus()
@@ -190,11 +180,9 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
             .run();
         }
       } else {
-        // Remove link if URL is empty
         editor.chain().focus().extendMarkRange('link').unsetLink().run();
       }
       
-      // Close dialog and reset fields
       setLinkDialogOpen(false);
       setLinkUrl('');
       setLinkText('');
@@ -292,7 +280,6 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
           </CardContent>
         </Card>
 
-        {/* Link Dialog */}
         <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
           <DialogContent>
             <DialogHeader>

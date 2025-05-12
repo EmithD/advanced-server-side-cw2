@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest,{ params }: { params: Promise<{ id: string }> }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = (await params).id
-
-  const authHeader = req.headers.get('Authorization');
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   const beRes = await fetch(`${process.env.BE_URL}/api/blogs/${id}`, {
     method: 'GET',
     headers: {
-      "Authorization": `Bearer ${token}`,
       'Content-Type': 'application/json'
     }
   });
@@ -28,18 +20,12 @@ export async function GET(req: NextRequest,{ params }: { params: Promise<{ id: s
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = (await params).id
-
-  const authHeader = req.headers.get('Authorization');
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const cookie = req.headers.get('cookie') || '';
 
   const beRes = await fetch(`${process.env.BE_URL}/api/blogs/${id}`, {
     method: 'DELETE',
     headers: {
-      "Authorization": `Bearer ${token}`,
+      "Cookie": cookie,
       'Content-Type': 'application/json'
     }
   });
@@ -54,20 +40,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = (await params).id
-
-  const authHeader = req.headers.get('Authorization');
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const cookie = req.headers.get('cookie') || '';
 
   const body = await req.json();
 
   const beRes = await fetch(`${process.env.BE_URL}/api/blogs/${id}`, {
     method: 'PATCH',
     headers: {
-      "Authorization": `Bearer ${token}`,
+      'Cookie': cookie,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(body)

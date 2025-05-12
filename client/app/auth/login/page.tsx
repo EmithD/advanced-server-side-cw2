@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Mail, Lock, AlertCircle, Loader2, Globe } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/context/AuthContext';
 
 interface LoginFormData {
   email: string;
@@ -25,45 +26,13 @@ interface LoginFormData {
 
 const LoginPage = () => {
   const router = useRouter();
+  const { login, isLoading } = useAuth();
   
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
   });
   const [error, setError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('authToken') || '';
-
-        if (!token) {
-          return;
-        }
-        const response = await fetch('http://localhost:8080/api/auth/profile', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        if (!response.ok) {
-          localStorage.removeItem('authToken');
-          return; 
-        }
-        const data = await response.json();
-        if (data.success) {
-          router.push('/admin');
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-      }
-    };
-
-    checkAuth();
-    
-  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -77,52 +46,16 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
-  
+    
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
-      });
-      
-      const responseData = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Invalid credentials');
-      }
-
-      if (!responseData.success || !responseData.data) {
-        throw new Error('Unexpected response format from server');
-      }
-
-      const { token, user } = responseData.data;
-      
-      if (!token) {
-        throw new Error('No authentication token received');
-      }
-
-      localStorage.setItem('authToken', token);
-      console.log('Token stored:', token);
-
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
-        console.log('User data stored:', user);
-      }
-  
-      router.push('/admin');
-      
+      await login(formData.email, formData.password);
     } catch (err) {
-      console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Failed to login. Please check your credentials.');
-    } finally {
-      setIsLoading(false);
     }
+  };
+
+  const handleBrowseWithoutLogin = () => {
+    router.push('/admin');
   };
 
   return (
@@ -161,6 +94,7 @@ const LoginPage = () => {
             </div>
             
             <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -191,12 +125,30 @@ const LoginPage = () => {
               )}
             </Button>
           </form>
+          
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or</span>
+            </div>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center justify-center gap-2"
+            onClick={handleBrowseWithoutLogin}
+          >
+            <Globe className="h-4 w-4" />
+            Browse without login
+          </Button>
         </CardContent>
         
         <CardFooter className="flex flex-wrap items-center justify-center gap-1">
-        <div className="text-sm text-muted-foreground">
-          Don&apos;t have an account?
-        </div>
+          <div className="text-sm text-muted-foreground">
+            Don&apos;t have an account?
+          </div>
           <Link
             href="/auth/register"
             className="text-sm text-primary hover:underline"

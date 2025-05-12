@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, AlertCircle, User, Loader2 } from 'lucide-react';
+import { Mail, Lock, AlertCircle, User, Loader2, Globe } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -77,6 +77,10 @@ const RegisterPage = () => {
     checkAuth();
     
   }, [router]);
+
+  const handleBrowseWithoutLogin = () => {
+    router.push('/admin');
+  };
 
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};
@@ -158,7 +162,7 @@ const RegisterPage = () => {
       }
 
       setTimeout(() => {
-        router.push('/auth/login');
+        router.push('/admin');
       }, 1500);
       
     } catch (err) {
@@ -284,6 +288,25 @@ const RegisterPage = () => {
               )}
             </Button>
           </form>
+          
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+          
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center justify-center gap-2"
+            onClick={handleBrowseWithoutLogin}
+          >
+            <Globe className="h-4 w-4" />
+            Browse without login
+          </Button>
+
         </CardContent>
 
         <CardFooter className="flex flex-wrap items-center justify-center gap-1">

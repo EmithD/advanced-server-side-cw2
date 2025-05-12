@@ -1,4 +1,3 @@
-// Like.js (Model)
 import db from '../config/db.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -6,10 +5,11 @@ export const createLike = (likeData) => {
     return new Promise((resolve, reject) => {
         const { user_id, blog_id } = likeData;
         const id = uuidv4();
+        const created_at = new Date().toISOString();
 
         db.run(
-            'INSERT INTO likes (id, user_id, blog_id) VALUES (?, ?, ?)',
-            [id, user_id, blog_id],
+            'INSERT INTO likes (id, user_id, blog_id, created_at) VALUES (?, ?, ?, ?)',
+            [id, user_id, blog_id, created_at],
             function(err) {
                 if (err) {
                     reject(err);

@@ -60,11 +60,7 @@ const EditBlog = () => {
       }
       
       try {
-        const response = await fetch(`/api/blogs/${blogId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
+        const response = await fetch(`/api/blogs/${blogId}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch blog post: ${response.status}`);
@@ -101,11 +97,7 @@ const EditBlog = () => {
       setCountryError(null);
       
       try {
-        const response = await fetch('/api/countries', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
+        const response = await fetch('/api/countries');
         
         if (!response.ok) {
           throw new Error(`Failed to fetch countries: ${response.status}`);
@@ -197,9 +189,9 @@ const EditBlog = () => {
 
       const response = await fetch(`/api/blogs/${blogId}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
         body: JSON.stringify(updatedFields),
       });

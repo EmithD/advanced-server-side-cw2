@@ -56,9 +56,9 @@ const CreateBlog = () => {
     try {
       const response = await fetch('/api/blogs', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
         body: JSON.stringify(blogPost),
       });
@@ -78,6 +78,7 @@ const CreateBlog = () => {
   };
 
   return (
+
     <div className="container mx-auto max-w-4xl py-8 px-4">
       <h1 className="text-3xl font-bold mb-8">Create New Travel Blog Post</h1>
       
@@ -140,6 +141,7 @@ const CreateBlog = () => {
         </Button>
       </div>
     </div>
+
   );
 };
 

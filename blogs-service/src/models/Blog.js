@@ -5,10 +5,11 @@ export const createBlog = (blogData) => {
     return new Promise(async (resolve, reject) => {
         const { user_id, country_code, country_name, title, content } = blogData;
         const id = uuidv4();
+        const created_at = new Date().toISOString();
 
         db.run(
-            'INSERT INTO blogs (id, user_id, country_code, country_name, title, content) VALUES (?, ?, ?, ?, ?, ?)',
-            [id, user_id, country_code, country_name, title, content],
+            'INSERT INTO blogs (id, user_id, country_code, country_name, title, content, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [id, user_id, country_code, country_name, title, content, created_at],
             function(err) {
                 if (err) {
                     reject(err);

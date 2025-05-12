@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSearch, SearchProvider } from '@/context/SearchContext';
+import { useAuth } from '@/context/AuthContext'; 
 import { SearchBar } from '@/components/SearchBar';
 import { 
   NavigationMenu, 
@@ -48,15 +49,10 @@ const generateInitials = (displayName: string | undefined | null): string => {
 const TravelBlogLayoutContent = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   const [isOpen, setIsOpen] = useState(false);
   const { setAllBlogs } = useSearch();
-  const [userData, setUserData] = useState<{
-    id: string | null;
-    initials: string;
-  }>({
-    id: null,
-    initials: 'TT'
-  });
   
   const pathname = usePathname();
+
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const fetchBlogsForSearch = async () => {
@@ -85,26 +81,6 @@ const TravelBlogLayoutContent = ({ children }: Readonly<{ children: React.ReactN
     fetchBlogsForSearch();
   }, [setAllBlogs]);
 
-  useEffect(() => {
-    (function loadUserData() {
-      if (typeof window === 'undefined') return;
-
-      try {
-        const storedUser = localStorage.getItem('user');
-        if (!storedUser) return;
-        
-        const parsedUser = JSON.parse(storedUser);
-        
-        setUserData({
-          id: parsedUser?.id || null,
-          initials: generateInitials(parsedUser?.display_name)
-        });
-      } catch (error) {
-        console.error('Failed to parse user from localStorage:', error);
-      }
-    })();
-  }, []);
-
   const isLinkActive = useCallback((href: string) => {
     return pathname === href;
   }, [pathname]);
@@ -114,9 +90,11 @@ const TravelBlogLayoutContent = ({ children }: Readonly<{ children: React.ReactN
     { href: '/admin/countries', label: 'Countries' }
   ], []);
 
-  const profileLink = useMemo(() => 
-    userData.id ? `/admin/profile/${userData.id}` : '/admin/profile/'
-  , [userData.id]);
+  const profileLink = useMemo(() =>
+    user?.id ? `/admin/profile/${user.id}` : '/admin/profile/'
+  , [user?.id]);
+
+  const userInitials = generateInitials(user?.display_name || user?.email || '');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -169,27 +147,34 @@ const TravelBlogLayoutContent = ({ children }: Readonly<{ children: React.ReactN
               </Link>
             </Button>
 
+            {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full overflow-hidden" aria-label="User menu">
                   <Avatar className="h-8 w-8 aspect-square">
-                    <AvatarFallback>{userData.initials}</AvatarFallback>
+                    <AvatarFallback>{userInitials}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem className="flex items-center gap-2 py-2">
                   <User className="h-4 w-4" aria-hidden="true" />
-                  <Link href={profileLink} className="w-full">
-                    Profile
-                  </Link>
+                  <Link href={profileLink} className="w-full">Profile</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2 py-2 text-red-500 focus:text-red-500">
+                <DropdownMenuItem
+                  className="flex items-center gap-2 py-2 text-red-500 focus:text-red-500"
+                  onClick={logout}
+                >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
-                  <Link href="/sign-out" className="w-full">Sign Out</Link>
+                  Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : (
+            <Button variant="default" size="sm" asChild>
+              <Link href="/auth/login">Sign In</Link>
+            </Button>
+          )}
           </div>
         </div>
       </header>
@@ -216,27 +201,34 @@ const TravelBlogLayoutContent = ({ children }: Readonly<{ children: React.ReactN
               </Link>
             </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full overflow-hidden" aria-label="User menu">
-                  <Avatar className="h-8 w-8 aspect-square">
-                    <AvatarFallback>{userData.initials}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="flex items-center gap-2 py-2">
-                  <User className="h-4 w-4" aria-hidden="true" />
-                  <Link href={profileLink} className="w-full">
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2 py-2 text-red-500 focus:text-red-500">
-                  <LogOut className="h-4 w-4" aria-hidden="true" />
-                  <Link href="/sign-out" className="w-full">Sign Out</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full overflow-hidden" aria-label="User menu">
+                    <Avatar className="h-8 w-8 aspect-square">
+                      <AvatarFallback>{userInitials}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem className="flex items-center gap-2 py-2">
+                    <User className="h-4 w-4" aria-hidden="true" />
+                    <Link href={profileLink} className="w-full">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 py-2 text-red-500 focus:text-red-500"
+                    onClick={logout}
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="default" size="sm" asChild>
+                <Link href="/auth/login">Sign In</Link>
+              </Button>
+            )}
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>

@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useMemo, JSX } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext'; 
 import BlogCard, { BlogPost } from '@/components/BlogCard';
 import BlogCardSkeleton from '@/components/BlogCardSkeleton';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Filter, X, Search } from 'lucide-react';
+import { PlusCircle, Filter, X, Search, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,8 @@ import { Card } from '@/components/ui/card';
 
 const ALL_COUNTRIES = "all_countries";
 const ALL_USERS = "all_users";
+
+type SortOption = 'newest' | 'oldest' | 'most_likes' | 'least_likes' | 'most_comments' | 'least_comments';
 
 interface BlogLandState {
   blogs: BlogPost[];
@@ -25,6 +28,7 @@ interface BlogLandState {
   activeTab: string;
   selectedCountry: string;
   selectedUser: string;
+  sortBy: SortOption;
 }
 
 interface UserData {
@@ -42,12 +46,15 @@ const BlogLand: React.FC = () => {
     followedError: null,
     activeTab: "all",
     selectedCountry: ALL_COUNTRIES,
-    selectedUser: ALL_USERS
+    selectedUser: ALL_USERS,
+    sortBy: 'newest'
   });
 
+  const { isAuthenticated } = useAuth();
+  
   const { 
     blogs, followedBlogs, loading, followedLoading, error, followedError, 
-    activeTab, selectedCountry, selectedUser 
+    activeTab, selectedCountry, selectedUser, sortBy
   } = state;
 
   const updateState = (newState: Partial<BlogLandState>): void => {
@@ -64,11 +71,10 @@ const BlogLand: React.FC = () => {
     ): Promise<void> => {
       try {
         updateState({ [loadingKey]: true } as Partial<BlogLandState>);
-        const authToken = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-        
+
         const response = await fetch(endpoint, {
           method,
-          headers: { 'Authorization': `Bearer ${authToken}` }
+          credentials: 'include'
         });
         
         if (!response.ok) {
@@ -89,11 +95,13 @@ const BlogLand: React.FC = () => {
       }
     };
 
-    Promise.all([
-      fetchData('/api/blogs', 'GET', 'blogs', 'loading', 'error'),
-      fetchData('/api/blogs/users', 'POST', 'followedBlogs', 'followedLoading', 'followedError')
-    ]);
-  }, []);
+
+    fetchData('/api/blogs', 'GET', 'blogs', 'loading', 'error');
+
+    if (isAuthenticated) {
+      fetchData('/api/blogs/users', 'POST', 'followedBlogs', 'followedLoading', 'followedError');
+    }
+}, [isAuthenticated]);
 
   const { uniqueCountries, uniqueUsers } = useMemo(() => {
     const currentBlogs = activeTab === "all" ? blogs : followedBlogs;
@@ -120,14 +128,33 @@ const BlogLand: React.FC = () => {
     };
   }, [blogs, followedBlogs, activeTab]);
 
-  const filteredBlogs = useMemo(() => {
+  const filteredAndSortedBlogs = useMemo(() => {
     const currentBlogs = activeTab === "all" ? blogs : followedBlogs;
-    
-    return currentBlogs.filter(blog => 
+
+    const filtered = currentBlogs.filter(blog => 
       (selectedCountry === ALL_COUNTRIES || blog.country_name === selectedCountry) &&
       (selectedUser === ALL_USERS || (blog.user && blog.user.user_id === selectedUser))
     );
-  }, [blogs, followedBlogs, activeTab, selectedCountry, selectedUser]);
+
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'most_likes':
+          return (b.likes.count || 0) - (a.likes.count || 0);
+        case 'least_likes':
+          return (a.likes.count || 0) - (b.likes.count || 0);
+        case 'most_comments':
+          return (b.comments.count || 0) - (a.comments.count || 0);
+        case 'least_comments':
+          return (a.comments.count || 0) - (b.comments.count || 0);
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+  }, [blogs, followedBlogs, activeTab, selectedCountry, selectedUser, sortBy]);
 
   const clearFilters = (): void => {
     updateState({ 
@@ -213,11 +240,11 @@ const BlogLand: React.FC = () => {
     if (isLoading) return renderLoadingState();
     if (currentError) return renderError(currentError);
     if (currentBlogs.length === 0) return renderEmptyState(false);
-    if (hasFilters && filteredBlogs.length === 0) return renderEmptyState(true);
+    if (hasFilters && filteredAndSortedBlogs.length === 0) return renderEmptyState(true);
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {filteredBlogs.map((blog) => (
+        {filteredAndSortedBlogs.map((blog) => (
           <BlogCard
             key={blog.id} 
             blog={blog} 
@@ -229,6 +256,18 @@ const BlogLand: React.FC = () => {
   };
 
   const hasActiveFilters = selectedCountry !== ALL_COUNTRIES || selectedUser !== ALL_USERS;
+
+  const getSortDisplayText = (option: SortOption): string => {
+    switch (option) {
+      case 'newest': return 'Newest First';
+      case 'oldest': return 'Oldest First';
+      case 'most_likes': return 'Most Likes';
+      case 'least_likes': return 'Least Likes';
+      case 'most_comments': return 'Most Comments';
+      case 'least_comments': return 'Least Comments';
+      default: return 'Sort By';
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 md:p-6">
@@ -252,63 +291,92 @@ const BlogLand: React.FC = () => {
           clearFilters();
         }}
       >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-          <TabsList>
-            <TabsTrigger value="all">All Stories</TabsTrigger>
-            <TabsTrigger value="followed">Following</TabsTrigger>
-          </TabsList>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+          <div>
+            { isAuthenticated ? <TabsList>
+              <TabsTrigger value="all">All Stories</TabsTrigger>
+              <TabsTrigger value="followed">Following</TabsTrigger>
+            </TabsList> : <p></p>}
+          </div>
           
-          <Card className="mt-4 md:mt-0 p-1 border border-muted flex flex-row items-center gap-3 max-w-md">
-            <div className="flex items-center border-r border-muted pr-3 pl-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-col sm:flex-row items-center gap-3 mt-4 md:mt-0 w-full md:w-auto">
+            <div className="w-full sm:w-auto flex items-center">
+              <Select 
+                value={sortBy} 
+                onValueChange={(value) => updateState({ sortBy: value as SortOption })}
+              >
+                <SelectTrigger className="w-full sm:w-48 h-9">
+                  <div className="flex items-center">
+                    {sortBy.includes('most') || sortBy === 'newest' ? 
+                      <SortDesc className="mr-2 h-4 w-4" /> : 
+                      <SortAsc className="mr-2 h-4 w-4" />
+                    }
+                    <span>{getSortDisplayText(sortBy)}</span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="most_likes">Most Likes</SelectItem>
+                  <SelectItem value="least_likes">Least Likes</SelectItem>
+                  <SelectItem value="most_comments">Most Comments</SelectItem>
+                  <SelectItem value="least_comments">Least Comments</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="flex-1 flex flex-row gap-2">
-              <Select 
-                value={selectedCountry} 
-                onValueChange={(value) => updateState({ selectedCountry: value })}
-              >
-                <SelectTrigger className="w-full border-0 h-8 px-2 text-sm bg-transparent focus:ring-0 focus:ring-offset-0">
-                  <SelectValue placeholder="Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_COUNTRIES}>All Countries</SelectItem>
-                  {uniqueCountries.map(country => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Card className="w-full sm:w-auto p-1 border border-muted flex flex-row items-center gap-3 max-w-md">
+              <div className="flex items-center border-r border-muted pr-3 pl-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+              </div>
+
+              <div className="flex-1 flex flex-row gap-2">
+                <Select 
+                  value={selectedCountry} 
+                  onValueChange={(value) => updateState({ selectedCountry: value })}
+                >
+                  <SelectTrigger className="w-full border-0 h-8 px-2 text-sm bg-transparent focus:ring-0 focus:ring-offset-0">
+                    <SelectValue placeholder="Country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_COUNTRIES}>All Countries</SelectItem>
+                    {uniqueCountries.map(country => (
+                      <SelectItem key={country} value={country}>{country}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <span className="text-muted-foreground self-center">|</span>
+                
+                <Select 
+                  value={selectedUser} 
+                  onValueChange={(value) => updateState({ selectedUser: value })}
+                >
+                  <SelectTrigger className="w-full border-0 h-8 px-2 text-sm bg-transparent focus:ring-0 focus:ring-offset-0">
+                    <SelectValue placeholder="User" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_USERS}>All Users</SelectItem>
+                    {uniqueUsers.map(user => (
+                      <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <span className="text-muted-foreground self-center">|</span>
-              
-              <Select 
-                value={selectedUser} 
-                onValueChange={(value) => updateState({ selectedUser: value })}
-              >
-                <SelectTrigger className="w-full border-0 h-8 px-2 text-sm bg-transparent focus:ring-0 focus:ring-offset-0">
-                  <SelectValue placeholder="User" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_USERS}>All Users</SelectItem>
-                  {uniqueUsers.map(user => (
-                    <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {hasActiveFilters && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={clearFilters}
-                className="h-8 w-8 rounded-full hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Clear filters</span>
-              </Button>
-            )}
-          </Card>
+              {hasActiveFilters && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={clearFilters}
+                  className="h-8 w-8 rounded-full hover:bg-muted"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Clear filters</span>
+                </Button>
+              )}
+            </Card>
+          </div>
         </div>
         
         {hasActiveFilters && (

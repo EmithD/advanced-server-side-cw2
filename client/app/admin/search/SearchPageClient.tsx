@@ -33,7 +33,7 @@ export default function SearchPage() {
       const fuse = new Fuse(allBlogs, {
         keys: [
           { name: 'title', weight: 2 },
-          { name: 'content', weight: 1 },
+          { name: 'content', weight: 1.5 },
           { name: 'country_name', weight: 1.5 },
           { name: 'user.display_name', weight: 1 }
         ],

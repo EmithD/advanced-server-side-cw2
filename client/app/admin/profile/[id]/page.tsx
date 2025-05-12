@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext'; 
 import { Button } from '@/components/ui/button';
 import { Loader2, PlusCircle, UserPlus, Check, Users } from 'lucide-react';
 import BlogCard, { BlogPost } from '@/components/BlogCard';
@@ -34,6 +35,7 @@ type FollowUser = {
 
 export default function Profile() {
   const params = useParams();
+  const router = useRouter();
   const userId = params.id;
   
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
@@ -48,6 +50,8 @@ export default function Profile() {
   const [showFollowersDialog, setShowFollowersDialog] = useState(false);
   const [showFollowingDialog, setShowFollowingDialog] = useState(false);
 
+  const { user, isAuthenticated } = useAuth();
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!userId) {
@@ -56,71 +60,69 @@ export default function Profile() {
         return;
       }
 
-      const user = localStorage.getItem('user');
-      const userData = user ? JSON.parse(user) : null;
-      const loggedInUserId = userData ? userData.id : null;
-      setIsOwnProfile(userId === loggedInUserId);
-
       try {
         setLoading(true);
-        console.log('Fetching user data for userId:', userId);
 
         const userResponse = await fetch(`/api/auth/profile/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
+          credentials: 'include'
         });
-        
+
         if (userResponse.ok) {
           const userData = await userResponse.json();
           setUserDisplayName(userData.data.user.display_name || "User");
           setFollowers(userData.data.user.followers || []);
           setFollowing(userData.data.user.following || []);
 
-          if (loggedInUserId && userData.data.user.followers) {
-            const isAlreadyFollowing = userData.data.user.followers.some(
+          if (user) {
+            const loggedInUserId = user.id;
+            setIsOwnProfile(userId === loggedInUserId);
+            
+            const isAlreadyFollowing = userData.data.user.followers?.some(
               (follower: FollowUser) => follower.follower_id === loggedInUserId
             );
             setIsFollowing(isAlreadyFollowing);
+          } else {
+            setIsOwnProfile(false);
           }
         } else {
           throw new Error(`Failed to fetch user profile: ${userResponse.status}`);
         }
 
-        const blogsResponse = await fetch(`/api/blogs/user/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-        
+        const blogsResponse = await fetch(`/api/blogs/user/${userId}`);
+
         if (!blogsResponse.ok) {
           throw new Error(`Failed to fetch user blogs: ${blogsResponse.status}`);
         }
-        
+
         const blogsData = await blogsResponse.json();
         setBlogs(blogsData.data || []);
-        
+
       } catch (error) {
         console.error('Error fetching user data:', error);
-        setError('Failed to load user\'s travel stories. Please try again later.');
+        setError("Failed to load user's travel stories. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserData();
-  }, [userId]);
+  }, [userId, user]);
 
   const handleFollow = async () => {
     if (followLoading) return;
+
+    if (!isAuthenticated) {
+      router.push('/auth/login');
+      return;
+    }
     
     try {
       setFollowLoading(true);
     
       const response = await fetch(`/api/auth/follow/${userId}`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -129,9 +131,7 @@ export default function Profile() {
         setIsFollowing(!isFollowing);
 
         const userResponse = await fetch(`/api/auth/profile/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
+          credentials: 'include'
         });
         
         if (userResponse.ok) {

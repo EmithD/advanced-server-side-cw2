@@ -1,44 +1,20 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useRef } from 'react';
 import RichTextEditor, { RichTextEditorRef } from '@/components/rich-text-editor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Save, Loader2 } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import CountryDropdown from '@/components/CountriesDropDown';
-import { useAuth } from '@/context/AuthContext';
-
-type CountryInfo = {
-  [key: string]: any;
-};
 
 const CreateBlog = () => {
   const [title, setTitle] = useState('');
   const [country, setCountry] = useState('');
   const [countryName, setCountryName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const editorRef = useRef<RichTextEditorRef>(null);
-  const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      setCheckingAuth(true);
-
-      if (!isLoading && !isAuthenticated) {
-        toast.error("Please log in to create a blog post");
-        router.push('/auth/login');
-      }
-      
-      setCheckingAuth(false);
-    };
-
-    checkAuth();
-  }, [isAuthenticated, isLoading, router]);
 
   const handleCountrySelect = (countryCode: string, _countryData?: CountryInfo, selectedCountryName?: string) => {
     setCountry(countryCode);
@@ -46,12 +22,6 @@ const CreateBlog = () => {
   };
 
   const handleSave = async () => {
-    if (!isAuthenticated) {
-      toast.error("Please log in to create a blog post");
-      router.push('/auth/login');
-      return;
-    }
-
     if (!title) {
       toast.error("Please enter a title for your blog post");
       return;
@@ -94,16 +64,11 @@ const CreateBlog = () => {
       });
       
       if (!response.ok) {
-        if (response.status === 401) {
-          toast.error("Your session has expired. Please log in again.");
-          router.push('/auth/login');
-          return;
-        }
         throw new Error('Failed to save blog post');
       }
 
       toast.success("Blog post saved successfully!");
-      router.push('/admin');
+      window.location.href = '/admin';
     } catch (error) {
       console.error('Error saving blog post:', error);
       toast.error("Failed to save blog post. Please try again.");
@@ -112,20 +77,8 @@ const CreateBlog = () => {
     }
   };
 
-  if (checkingAuth || isLoading) {
-    return (
-      <div className="container mx-auto max-w-4xl py-20 px-4 flex flex-col items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-        <p className="text-lg text-muted-foreground">Checking authentication...</p>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
   return (
+
     <div className="container mx-auto max-w-4xl py-8 px-4">
       <h1 className="text-3xl font-bold mb-8">Create New Travel Blog Post</h1>
       
@@ -182,20 +135,13 @@ const CreateBlog = () => {
           className="bg-primary text-primary-foreground hover:bg-primary/90"
           size="lg"
         >
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" /> 
-              Saving...
-            </>
-          ) : (
-            <>
-              Save Blog Post
-              <Save className="ml-2 h-5 w-5" />
-            </>
-          )}
+          {saving ? 'Saving...' : 'Save Blog Post'}
+
+          <Save className="ml-2 h-5 w-5" />
         </Button>
       </div>
     </div>
+
   );
 };
 

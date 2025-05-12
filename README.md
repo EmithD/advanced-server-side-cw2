@@ -15,12 +15,5 @@ Advanced Server Side coursework - 2: requirement for IIT w/ University of Westmi
 
 ### Initialization
 <ul>
-
-</ul>
-
-<hr />
-
-### Explore
-<ul>
-
+  <li><code>docker-compose up --build<code></li>
 </ul>

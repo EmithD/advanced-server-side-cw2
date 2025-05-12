@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - BE_URL="http://localhost:8080"
+    depends_on:
+      - blogs-service
+      - core-services
+    networks:
+      - travel-tales-network
+
+  blogs-service:
+    build:
+      context: ./blogs-service
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - ALLOWED_ORIGIN="http://localhost:8080"
+    depends_on:
+      - core-services
+    networks:
+      - travel-tales-network
+
+  core-services:
+    build:
+      context: ./core-services
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - VERSION=v1
+      - JWT_SECRET=thisisthesecretcrabbypattyrecipe
+      - JWT_EXPIRY=48h
+      - NODE_ENV="development"
+      - BLOG_BE_URL="http://localhost:3001"
+      - FRONTEND_URL="http://localhost:3000"
+    networks:
+      - travel-tales-network
+
+networks:
+  travel-tales-network:
+    driver: bridge

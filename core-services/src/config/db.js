@@ -53,10 +53,8 @@ const initDb = async () => {
           FOREIGN KEY (follower_id) REFERENCES users (id) ON DELETE CASCADE,
           FOREIGN KEY (following_id) REFERENCES users (id) ON DELETE CASCADE,
           CHECK (follower_id <> following_id)
-        )`
-      ];
-
-      const countriesTable = [
+        )`,
+        
         `CREATE TABLE IF NOT EXISTS countries (
           id TEXT PRIMARY KEY,
           common_name TEXT,
@@ -66,7 +64,7 @@ const initDb = async () => {
       ];
 
       db.serialize(() => {
-        const allQueries = [...tables, ...countriesTable];
+        const allQueries = [...tables];
 
         let completed = 0;
         allQueries.forEach((sql, index) => {

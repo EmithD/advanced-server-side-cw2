@@ -130,7 +130,7 @@ const RegisterPage = () => {
       }
 
       setTimeout(() => {
-        router.push('/admin');
+        router.push('/auth/login');
       }, 1500);
       
     } catch (err) {

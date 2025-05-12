@@ -5,6 +5,7 @@ export async function GET(req: NextRequest) {
 
   const beRes = await fetch(`${process.env.BE_URL}/api/auth/profile`, {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       'Cookie': cookie

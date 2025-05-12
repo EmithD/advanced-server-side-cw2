@@ -25,7 +25,7 @@ const authenticateUser = (req, res, next) => {
         res.clearCookie('authToken', {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
+          sameSite: 'lax',
           path: '/'
         });
       }
@@ -57,6 +57,11 @@ const verifyToken = (token) => {
   try {
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      console.log('Token expired');
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      console.log('Invalid token');
+    }
     return null;
   }
 };

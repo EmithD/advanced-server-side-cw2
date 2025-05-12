@@ -22,7 +22,7 @@ export const setAuthCookie = (res, token) => {
   res.cookie('authToken', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
     path: '/'
   });

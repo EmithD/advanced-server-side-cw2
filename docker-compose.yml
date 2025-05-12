@@ -41,6 +41,7 @@ services:
       - JWT_EXPIRY=48h
       - NODE_ENV="development"
       - BLOG_BE_URL=http://blogs-service:3001
+      - FRONTEND_URL=http://client:3000
     networks:
       - travel-tales-network
 

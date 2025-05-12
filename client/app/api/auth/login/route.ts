@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-
   const reqData = await req.json();
 
   const beRes = await fetch(`${process.env.BE_URL}/api/auth/login`, {
@@ -9,13 +8,18 @@ export async function POST(req: NextRequest) {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(reqData)
+    body: JSON.stringify(reqData),
+    credentials: 'include'
   });
 
-  if (!beRes.ok) {
-    return NextResponse.json({ error: 'Failed to fetch blog post' }, { status: beRes.status });
-  }
-
   const data = await beRes.json();
-  return NextResponse.json(data);
+  const response = NextResponse.json(data);
+
+  const setCookieHeader = beRes.headers.get('set-cookie');
+  
+  if (setCookieHeader) {
+    response.headers.set('set-cookie', setCookieHeader);
+  }
+  
+  return response;
 }

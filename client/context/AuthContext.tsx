@@ -62,9 +62,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.BE_URL}/api/auth/login`, {
+      const response = await fetch(`/api/auth/login`, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -95,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await fetch(`${process.env.BE_URL}/api/auth/logout`, {
+      await fetch(`/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
         headers: {

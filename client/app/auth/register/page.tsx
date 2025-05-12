@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, User, Loader2, Globe } from 'lucide-react';
@@ -45,38 +45,6 @@ const RegisterPage = () => {
   
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('authToken') || '';
-
-        if (!token) {
-          return;
-        }
-        const response = await fetch(`${process.env.BE_URL}/api/auth/profile`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        if (!response.ok) {
-          localStorage.removeItem('authToken');
-          return; 
-        }
-        const data = await response.json();
-        if (data.success) {
-          router.push('/admin');
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-      }
-    };
-
-    checkAuth();
-    
-  }, [router]);
 
   const handleBrowseWithoutLogin = () => {
     router.push('/admin');
@@ -143,7 +111,7 @@ const RegisterPage = () => {
     
     try {
 
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

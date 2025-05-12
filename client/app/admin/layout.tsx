@@ -58,7 +58,6 @@ const TravelBlogLayoutContent = ({ children }: Readonly<{ children: React.ReactN
   
   const pathname = usePathname();
 
-  // Fetch blogs for search
   useEffect(() => {
     const fetchBlogsForSearch = async () => {
       try {
@@ -86,7 +85,6 @@ const TravelBlogLayoutContent = ({ children }: Readonly<{ children: React.ReactN
     fetchBlogsForSearch();
   }, [setAllBlogs]);
 
-  // Load user data
   useEffect(() => {
     (function loadUserData() {
       if (typeof window === 'undefined') return;

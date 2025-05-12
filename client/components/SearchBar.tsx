@@ -31,8 +31,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const inputRef = useRef<HTMLInputElement>(null);
-  
-  // Handle click outside to close suggestions
+
   useOnClickOutside(searchRef, () => {
     clearSuggestions();
   });
@@ -80,7 +79,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }
   };
 
-  // Focus the input on mount
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
@@ -115,7 +113,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         </button>
       </form>
 
-      {/* Suggestions dropdown */}
       {suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-md z-50 max-h-[300px] overflow-y-auto w-64 md:w-80">
           <ul className="py-1">
@@ -148,7 +145,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                   onClick={() => handleSearch(new Event('submit') as unknown as React.FormEvent<HTMLFormElement>)}
                 >
                   <Search className="h-4 w-4 mr-2" />
-                  <span>Search for "{searchQuery}"</span>
+                  <span>Search for {searchQuery}</span>
                 </Button>
               </li>
             )}

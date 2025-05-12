@@ -16,7 +16,7 @@ const CreateBlog = () => {
   const [saving, setSaving] = useState(false);
   const editorRef = useRef<RichTextEditorRef>(null);
 
-  const handleCountrySelect = (countryCode: string, _countryData?: any, selectedCountryName?: string) => {
+  const handleCountrySelect = (countryCode: string, _countryData?: CountryInfo, selectedCountryName?: string) => {
     setCountry(countryCode);
     setCountryName(selectedCountryName || '');
   };

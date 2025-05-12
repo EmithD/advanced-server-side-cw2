@@ -31,6 +31,7 @@ export interface BlogPost {
   };
   created_at: string;
   user: {
+    user_id: string;
     display_name: string;
     email: string;
   }

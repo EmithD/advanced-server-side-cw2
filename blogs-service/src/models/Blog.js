@@ -70,6 +70,10 @@ export const getBlogsByUserId = (user_id) => {
 
 export const getBlogsByUsers = (user_ids) => {
     return new Promise(async (resolve, reject) => {
+        if (!Array.isArray(user_ids) || user_ids.length === 0) {
+            return resolve([]);
+        }
+
         const placeholders = user_ids.map(() => '?').join(',');
         db.all(
             `SELECT * FROM blogs WHERE user_id IN (${placeholders})`,

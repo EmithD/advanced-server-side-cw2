@@ -31,7 +31,7 @@ interface Country {
 }
 
 interface CountryDropdownProps {
-  onCountrySelect: (countryCode: string, countryData?: any, countryName?: string) => void;
+  onCountrySelect: (countryCode: string, countryData?: CountryInfo, countryName?: string) => void;
   selectedCountryCode?: string;
   label?: string;
   placeholder?: string;

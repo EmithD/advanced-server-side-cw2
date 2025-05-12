@@ -1,4 +1,5 @@
 import * as UserModel from '../models/User.js';
+import * as FollowModel from '../models/Follow.js';
 
 export const createBlogController = async (req, res) => {
 
@@ -339,6 +340,52 @@ export const updateBlogController = async (req, res) => {
 
     } catch (error) {
         console.error('Error in updateBlogController:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+export const getBlogsByFollowingController = async (req, res) => {
+    try {
+
+        const user_id = req.user.id;
+        
+        const following = await FollowModel.getFollowing(user_id);
+        const user_ids = following.map(follow => follow.following_id);
+
+        const blogs = await fetch(`${process.env.BLOG_BE_URL}/api/blogs/users`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                user_ids
+            })
+        });
+
+        if (!blogs.ok) {
+            return res.status(500).json({ error: "Blog Res from 3001 failed."})
+        }
+
+        const blogsJson = await blogs.json();
+        const blogsData = blogsJson.data;
+
+        for (const blog of blogsData) {
+            const userID = blog.user_id;
+            const user = await UserModel.findUserById(userID);
+            blog.user = {
+                user_id: user.id,
+                display_name: user.display_name,
+                email: user.email
+            };
+        };
+
+        res.status(200).json({
+            success: true,
+            data: blogsData
+        });
+
+    } catch (error) {
+        console.error('Error in getBlogsByUsersController:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 }

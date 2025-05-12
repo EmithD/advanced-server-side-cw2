@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import BlogCard, { BlogPost } from '@/components/BlogCard';
 import BlogCardSkeleton from '@/components/BlogCardSkeleton';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Filter, X, Search, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
+import { PlusCircle, Filter, X, Search, SortAsc, SortDesc } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';

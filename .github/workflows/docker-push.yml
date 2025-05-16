@@ -1,0 +1,41 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  push-to-ecr:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push core-services image
+        run: |
+          docker build -t core-services ./core-services
+          docker tag core-services:latest ${{ secrets.ECR_REPO_CORE_SERVICES }}:latest
+          docker push ${{ secrets.ECR_REPO_CORE_SERVICES }}:latest
+
+      - name: Build and Push blogs-service image
+        run: |
+          docker build -t blogs-service ./blogs-service
+          docker tag blogs-service:latest ${{ secrets.ECR_REPO_BLOGS_SERVICE }}:latest
+          docker push ${{ secrets.ECR_REPO_BLOGS_SERVICE }}:latest
